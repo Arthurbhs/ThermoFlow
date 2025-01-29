@@ -1,5 +1,5 @@
 import React from "react";
-import { AppBar, Toolbar, Typography, IconButton, Box, Menu, MenuItem } from "@mui/material";
+import { AppBar, Toolbar, IconButton, Box, Menu, MenuItem } from "@mui/material";
 import { Menu as MenuIcon } from "@mui/icons-material";
 import { styled } from "@mui/system";
 import { Link } from "react-router-dom";
