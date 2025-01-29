@@ -35,7 +35,7 @@ const Header = () => {
             <img
               src={Logo}
               alt="Logo"
-              style={{ maxHeight: "40px", width: "auto", objectFit: "contain" }}
+              style={{ maxHeight: "60px", padding: "7px", width: "auto", objectFit: "contain" }}
             />
        
         </Box>
