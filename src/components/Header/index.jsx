@@ -43,7 +43,7 @@ const Header = () => {
         {/* Links (para telas grandes) */}
         <Box sx={{ display: { xs: "none", md: "flex" } }}>
           <StyledLink to="/Calculadora">calcular</StyledLink>
-          <StyledLink to="/Historia">Historia</StyledLink>
+          <StyledLink to="/Historia">Sobre</StyledLink>
         </Box>
 
         {/* Ícone de menu (para telas pequenas) */}
@@ -58,14 +58,11 @@ const Header = () => {
             keepMounted
             sx={{ display: { xs: "block", md: "none" } }}
           >
-            <MenuItem onClick={handleMenuClose} component={Link} to="/home">
-              Home
+            <MenuItem onClick={handleMenuClose} component={Link} to="/Calculadora">
+              Calcular
             </MenuItem>
-            <MenuItem onClick={handleMenuClose} component={Link} to="/about">
-              About
-            </MenuItem>
-            <MenuItem onClick={handleMenuClose} component={Link} to="/contact">
-              Contact
+            <MenuItem onClick={handleMenuClose} component={Link} to="/Historia">
+              Sobre
             </MenuItem>
           </Menu>
         </Box>
