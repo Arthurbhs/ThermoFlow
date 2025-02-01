@@ -156,7 +156,7 @@ const WelcomePage = () => {
             }}
           >
             Esse web site é um projeto que visa auxiliar e ensinar de forma didática, sobre o 
-            Calculo de coeficiente da transferência de calor
+            Calculo de fluxo de calor
           </Typography>
           <Button
             variant="contained"
