@@ -1,5 +1,7 @@
 import Header from "../../components/Header";
-import Calculadora from "../../components/calculadora";
+import CalculadoraPlana from "../../components/calculadoraPlana";
+import CalculadoraCilindro from "../../components/calculadoraCilindro";
+import CalculadoraEsferico from "../../components/CalculadoraEsferica";
 import {Box} from "@mui/material";
 
 const CalculadoraCoe = () => {
@@ -8,7 +10,9 @@ const CalculadoraCoe = () => {
         sx={{
           margin: "-10px"
         }}>
-<Header/><Calculadora/>
+<Header/><CalculadoraPlana/>
+<CalculadoraCilindro/>
+<CalculadoraEsferico/>
 </Box>
     )
 }
