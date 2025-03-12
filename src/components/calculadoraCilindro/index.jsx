@@ -1,84 +1,149 @@
 import React, { useState } from "react";
-import { Box, TextField, Button, Typography } from "@mui/material";
+import {
+  Box,
+  TextField,
+  Button,
+  Typography,
+  IconButton,
+  useTheme,
+} from "@mui/material";
+import AddCircleIcon from "@mui/icons-material/AddCircle";
+import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 
 const CylindricalConvection = () => {
-  const [deltaT, setDeltaT] = useState("");
-  const [length, setLength] = useState(""); // Comprimento do cilindro
-  const [radius, setRadius] = useState(""); // Raio externo do cilindro
-  const [h, setH] = useState(""); // Coeficiente de convecção
-  const [thermalResistance, setThermalResistance] = useState(0);
-  const [heatFlux, setHeatFlux] = useState(0);
+ const theme = useTheme();
+   const [deltaT, setDeltaT] = useState("");
+   const [layers, setLayers] = useState([{ length: "", radius: "", h: "" }]);
+ 
+   const [totalResistance, setTotalResistance] = useState(0);
+   const [heatFlux, setHeatFlux] = useState(0);
+ 
+   // Permite apenas números e um único ponto decimal, incluindo negativos
+   const handleNumericInput = (value, setter) => {
+     if (/^-?\d*\.?\d*$/.test(value)) {
+       setter(value);
+     }
+   };
+   
+   const handleLayerChange = (index, field, value) => {
+     if (/^-?\d*\.?\d*$/.test(value)) {
+       setLayers((prevLayers) =>
+         prevLayers.map((layer, i) =>
+           i === index ? { ...layer, [field]: value } : layer
+         )
+       );
+     }
+   };
+  
+
+  const addLayer = () => {
+    setLayers([...layers, { length: "", radius: "", h: "" }]);
+  };
+
+  const removeLayer = (index) => {
+    setLayers(layers.filter((_, i) => i !== index));
+  };
 
   const handleCalculate = () => {
-    const L = parseFloat(length);
-    const r = parseFloat(radius);
-    const hValue = parseFloat(h);
-    const dT = parseFloat(deltaT);
-
-    if (isNaN(L) || isNaN(r) || isNaN(hValue) || isNaN(dT) || L <= 0 || r <= 0 || hValue <= 0) {
-      alert("Insira valores válidos!");
-      return;
+    let totalRes = 0;
+    layers.forEach((layer) => {
+      const L = parseFloat(layer.length);
+      const r = parseFloat(layer.radius);
+      const hValue = parseFloat(layer.h);
+      
+      if (!isNaN(L) && !isNaN(r) && !isNaN(hValue) && L > 0 && r > 0 && hValue > 0) {
+        const area = 2 * Math.PI * r * L;
+        totalRes += 1 / (hValue * area);
+      }
+    });
+    
+    setTotalResistance(totalRes);
+    if (totalRes > 0) {
+      setHeatFlux((parseFloat(deltaT || 0) / totalRes).toFixed(2));
+    } else {
+      setHeatFlux("0.00");
     }
-
-    // Área externa do cilindro
-    const area = 2 * Math.PI * r * L;
-
-    // Resistência térmica por convecção
-    const convResistance = 1 / (hValue * area);
-
-    // Fluxo de calor por convecção
-    const q = dT / convResistance;
-
-    setThermalResistance(convResistance);
-    setHeatFlux(q);
   };
 
   return (
-    <Box sx={{ maxWidth: 500, margin: "50px auto", padding: "30px", borderRadius: "16px", boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)", backgroundColor: "#fff", textAlign: "center" }}>
-      <Typography variant="h4" gutterBottom>Transferência de Calor por Convecção</Typography>
+    <Box
+      sx={{
+        maxWidth: 500,
+        margin: "50px auto",
+        padding: "30px",
+        borderRadius: "16px",
+        boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
+        backgroundColor: theme.palette.background.paper,
+        textAlign: "center",
+      }}
+    >
+      <Typography variant="h4" gutterBottom>
+        Transferência de Calor por Convecção
+      </Typography>
 
       <TextField
-        label="Comprimento do Cilindro (m)"
-        type="number"
-        value={length}
-        onChange={(e) => setLength(e.target.value)}
-        fullWidth
-        margin="normal"
-      />
+            label="Diferença de Temperatura (ΔT em K)"
+            value={deltaT}
+            onChange={(e) => handleNumericInput(e.target.value, setDeltaT)}
+            fullWidth
+            margin="normal"
+          />
 
-      <TextField
-        label="Raio Externo (m)"
-        type="number"
-        value={radius}
-        onChange={(e) => setRadius(e.target.value)}
-        fullWidth
-        margin="normal"
-      />
+      <Typography variant="h6" gutterBottom>
+        Camadas
+      </Typography>
+      {layers.map((layer, index) => (
+        <Box key={index} sx={{ marginBottom: "15px", textAlign: "center" }}>
+         <TextField
+                    label="Comprimento do Cilindro (m)"
+                    value={layer.length}
+                    onChange={(e) => handleLayerChange(index, "length", e.target.value)}
+                    fullWidth
+                    margin="normal"
+                  />
+        
+                  <TextField
+                    label="Raio Externo (m)"
+                    value={layer.radius}
+                    onChange={(e) => handleLayerChange(index, "radius", e.target.value)}
+                    fullWidth
+                    margin="normal"
+                  />
+        
+                  <TextField
+                    label="Coeficiente de Convecção (h em W/m².K)"
+                    value={layer.h}
+                    onChange={(e) => handleLayerChange(index, "h", e.target.value)}
+                    fullWidth
+                    margin="normal"
+                  />
+             <IconButton onClick={() => removeLayer(index)} sx={{ color: "#9b00d9" }}>
+            <RemoveCircleIcon />
+          </IconButton>
+        </Box>
+      ))}
 
-      <TextField
-        label="Coeficiente de Convecção (h em W/m².K)"
-        type="number"
-        value={h}
-        onChange={(e) => setH(e.target.value)}
-        fullWidth
-        margin="normal"
-      />
-
-      <TextField
-        label="Diferença de Temperatura (ΔT em K)"
-        type="number"
-        value={deltaT}
-        onChange={(e) => setDeltaT(e.target.value)}
-        fullWidth
-        margin="normal"
-      />
+<Button
+        variant="outlined"
+        onClick={addLayer}
+        startIcon={<AddCircleIcon />}
+        sx={{
+          marginBottom: "20px",
+          color: "#7300ff",
+          borderColor: "#7300ff",
+          "&:hover": { backgroundColor: "#7300ff", color: "white" },
+        }}
+      >
+        Adicionar Camada
+      </Button>
 
       <Button
         variant="contained"
         onClick={handleCalculate}
+        disabled={!deltaT || layers.some(layer => !layer.length || !layer.radius || !layer.h)}
         sx={{
           display: "block",
-          margin: "20px auto",
+          margin: "10px auto",
           backgroundColor: "#007BFF",
           "&:hover": { backgroundColor: "#0056b3" },
         }}
@@ -86,18 +151,19 @@ const CylindricalConvection = () => {
         Calcular
       </Button>
 
-      <Box sx={{ marginTop: "20px", padding: "15px", borderRadius: "8px", backgroundColor: "#f4f4f4" }}>
+
+      <Box sx={{ marginTop: "20px", padding: "15px", borderRadius: "8px", backgroundColor: theme.palette.background.paper }}>
         <Typography variant="h6">Resultados</Typography>
         <TextField
-          label="Resistência Térmica Convectiva (m².K/W)"
-          value={thermalResistance.toFixed(6)}
+          label="Resistência Térmica Total (K/W)"
+          value={totalResistance.toFixed(6)}
           fullWidth
           margin="normal"
           InputProps={{ readOnly: true }}
         />
         <TextField
           label="Fluxo de Calor (Q) em Watts"
-          value={heatFlux.toFixed(2)}
+          value={heatFlux}
           fullWidth
           margin="normal"
           InputProps={{ readOnly: true }}

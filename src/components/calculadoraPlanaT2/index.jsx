@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Box, TextField, Button, Typography, IconButton, MenuItem, Select, FormControl, InputLabel } from "@mui/material";
+import { Box, TextField, Button, Typography, IconButton, MenuItem, Select, FormControl, InputLabel, useTheme } from "@mui/material";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 
@@ -14,6 +14,7 @@ const materials = [
 ];
 
 const HeatTransferCalculator = () => {
+  const theme = useTheme();
   const [layers, setLayers] = useState([{ h: "", a: 1, material: "" }]);
   const [deltaT, setDeltaT] = useState("");
   const [area, setArea] = useState(1);
@@ -97,7 +98,7 @@ const HeatTransferCalculator = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: 600, margin: "50px auto", padding: "30px", borderRadius: "16px", boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)", backgroundColor: "#fff", textAlign: "center" }}>
+    <Box sx={{ maxWidth: 600, margin: "50px auto", padding: "30px", borderRadius: "16px", boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)", backgroundColor: theme.palette.background.paper, textAlign: "center" }}>
       <Typography variant="h4" gutterBottom>
         Transferência de Calor em estruturas planas
       </Typography>
@@ -129,7 +130,7 @@ const HeatTransferCalculator = () => {
 
       <Button variant="contained" onClick={() => { calculateResistance(); calculateHeatFlux(); }} sx={{ display: "block", margin: "10px auto", backgroundColor: "#007BFF", "&:hover": { backgroundColor: "#0056b3" } }}>Calcular</Button>
 
-      <Box sx={{ marginTop: "20px", padding: "15px", borderRadius: "8px", backgroundColor: "#f4f4f4" }}>
+      <Box sx={{ marginTop: "20px", padding: "15px", borderRadius: "8px", backgroundColor: theme.palette.background.paper }}>
         <Typography variant="h6">Resultados</Typography>
         <TextField label="Resistência Térmica Total (K/W)" value={totalResistance.toFixed(6)} fullWidth margin="normal" InputProps={{ readOnly: true }} />
         <TextField label="Fluxo de Calor (Q) em Watts" value={heatFlux} fullWidth margin="normal" InputProps={{ readOnly: true }} />

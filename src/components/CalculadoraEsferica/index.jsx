@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Box, TextField, Button, Typography, IconButton, MenuItem, Select, FormControl, InputLabel } from "@mui/material";
+import { Box, TextField, Button, Typography, IconButton, MenuItem, Select, FormControl, InputLabel, useTheme } from "@mui/material";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 
@@ -17,6 +17,7 @@ const materials = [
 ];
 
 const SphericalHeatTransfer = () => {
+  const theme = useTheme();
   const [layers, setLayers] = useState([{ k: "", r1: "", r2: "", material: "" }]);
   const [deltaT, setDeltaT] = useState("");
   const [totalResistance, setTotalResistance] = useState(0);
@@ -44,6 +45,8 @@ const SphericalHeatTransfer = () => {
               ...layer,
               material: value,
               k: materials.find((mat) => mat.name === value)?.value || "",
+              r1: "",
+              r2: ""
             }
           : layer
       )
@@ -60,31 +63,30 @@ const SphericalHeatTransfer = () => {
     setLayers(updatedLayers);
   };
 
-  const calculateResistance = () => {
-    let totalResistance = 0;
+  const calculateResistanceAndHeatFlux = () => {
+    let totalRes = 0;
     layers.forEach((layer) => {
       const k = parseFloat(layer.k);
       const r1 = parseFloat(layer.r1);
       const r2 = parseFloat(layer.r2);
-
+  
       if (!isNaN(k) && !isNaN(r1) && !isNaN(r2) && k > 0 && r1 > 0 && r2 > r1) {
-        totalResistance += (1 / (4 * Math.PI * k)) * ((1 / r1) - (1 / r2));
+        totalRes += (1 / (4 * Math.PI * k)) * ((1 / r1) - (1 / r2));
       }
     });
-    setTotalResistance(totalResistance);
-  };
-
-  const calculateHeatFlux = () => {
-    if (totalResistance > 0) {
-      const q = parseFloat(deltaT || 0) / totalResistance;
-      setHeatFlux(q.toFixed(2));
+  
+    setTotalResistance(totalRes);
+  
+    if (totalRes > 0) {
+      setHeatFlux((parseFloat(deltaT || 0) / totalRes).toFixed(2));
     } else {
       setHeatFlux("0.00");
     }
   };
+  
 
   return (
-    <Box sx={{ maxWidth: 600, margin: "50px auto", padding: "30px", borderRadius: "16px", boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)", backgroundColor: "#fff", textAlign: "center" }}>
+    <Box sx={{ maxWidth: 600, margin: "50px auto", padding: "30px", borderRadius: "16px", boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",  backgroundColor: theme.palette.background.paper, textAlign: "center" }}>
       <Typography variant="h4" gutterBottom>
         Transferência de Calor em Estruturas Esféricas
       </Typography>
@@ -113,12 +115,17 @@ const SphericalHeatTransfer = () => {
                   <Typography variant="body1">
                     Condutividade térmica (k): <strong>{layer.k ? `${layer.k} W/m.K` : "Selecione um material"}</strong>
                   </Typography>
-          <TextField
-            label="Raio Interno (m)"
-            value={layer.r1}
-            onChange={(e) => handleLayerChange(index, "r1", e.target.value)}
-            fullWidth
-          />
+                  <TextField
+  label="Raio Interno (m)"
+  type="number"
+  value={layer.r1}
+  onChange={(e) => handleLayerChange(index, "r1", e.target.value)}
+  fullWidth
+  inputProps={{ min: 0, step: "any" }}
+  error={layer.r1 !== "" && (isNaN(layer.r1) || parseFloat(layer.r1) <= 0)}
+  helperText={layer.r1 !== "" && parseFloat(layer.r1) <= 0 ? "Valor deve ser maior que zero" : ""}
+/>
+
           <TextField
             label="Raio Externo (m)"
             value={layer.r2}
@@ -137,10 +144,7 @@ const SphericalHeatTransfer = () => {
 
       <Button
   variant="contained"
-  onClick={() => {
-    calculateResistance();
-    calculateHeatFlux();
-  }}
+  onClick={calculateResistanceAndHeatFlux}
   sx={{
     display: "block",
     margin: "10px auto",
@@ -151,7 +155,8 @@ const SphericalHeatTransfer = () => {
   Calcular
 </Button>
 
-      <Box sx={{ marginTop: "20px", padding: "15px", borderRadius: "8px", backgroundColor: "#f4f4f4" }}>
+
+      <Box sx={{ marginTop: "20px", padding: "15px", borderRadius: "8px",  backgroundColor: theme.palette.background.paper}}>
         <Typography variant="h6">Resultados</Typography>
         <TextField label="Resistência Térmica Total (K/W)" value={totalResistance.toFixed(6)} fullWidth margin="normal" InputProps={{ readOnly: true }} />
         <TextField label="Fluxo de Calor (Q) em Watts" value={heatFlux} fullWidth margin="normal" InputProps={{ readOnly: true }} />

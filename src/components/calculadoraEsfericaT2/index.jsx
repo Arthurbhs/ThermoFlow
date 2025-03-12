@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { Box, TextField, Button, Typography, IconButton, MenuItem, Select, FormControl, InputLabel } from "@mui/material";
+import { Box, TextField, Button, Typography, IconButton, MenuItem, Select, FormControl, InputLabel, useTheme } from "@mui/material";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 
 const SphericalConvectionCalculator = () => {
+  const theme = useTheme()
   const [layers, setLayers] = useState([{ h: "", r: "" }]);
   const [deltaT, setDeltaT] = useState("");
   const [totalResistance, setTotalResistance] = useState(0);
@@ -56,7 +57,7 @@ const SphericalConvectionCalculator = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: 600, margin: "50px auto", padding: "30px", borderRadius: "16px", boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)", backgroundColor: "#fff", textAlign: "center" }}>
+    <Box sx={{ maxWidth: 600, margin: "50px auto", padding: "30px", borderRadius: "16px", boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)", backgroundColor: theme.palette.background.paper,textAlign: "center" }}>
       <Typography variant="h4" gutterBottom>
         Transferência de Calor  em Estruturas Esféricas
       </Typography>
@@ -112,7 +113,7 @@ const SphericalConvectionCalculator = () => {
         Calcular
       </Button>
 
-      <Box sx={{ marginTop: "20px", padding: "15px", borderRadius: "8px", backgroundColor: "#f4f4f4" }}>
+      <Box sx={{ marginTop: "20px", padding: "15px", borderRadius: "8px", backgroundColor: theme.palette.background.paper }}>
         <Typography variant="h6">Resultados</Typography>
         <TextField label="Resistência Térmica Total (K/W)" value={totalResistance.toFixed(6)} fullWidth margin="normal" InputProps={{ readOnly: true }} />
         <TextField label="Fluxo de Calor (Q) em Watts" value={heatFlux} fullWidth margin="normal" InputProps={{ readOnly: true }} />

@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Box, TextField, Button, Typography, IconButton, MenuItem, Select, FormControl, InputLabel } from "@mui/material";
+import { 
+  Box, TextField, Button, Typography, IconButton, MenuItem, Select, FormControl, 
+  InputLabel, useTheme 
+} from "@mui/material";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 
@@ -14,6 +17,7 @@ const materials = [
 ];
 
 const HeatTransferCalculator = () => {
+  const theme = useTheme();
   const [layers, setLayers] = useState([{ h: "", a: 1, material: "" }]);
   const [deltaT, setDeltaT] = useState("");
   const [area, setArea] = useState(1);
@@ -24,41 +28,39 @@ const HeatTransferCalculator = () => {
     setLayers((prevLayers) => prevLayers.map((layer) => ({ ...layer, a: area })));
   }, [area]);
 
+  useEffect(() => {
+    calculateResistance();
+  }, [layers]);
+
+  useEffect(() => {
+    calculateHeatFlux();
+  }, [totalResistance, deltaT]);
+
+  const handleInputChange = (setter) => (e) => {
+    const value = e.target.value.replace(/[^0-9.]/g, "").replace(/^(\d*\.\d*)\./g, "$1");
+    setter(value === "" || isNaN(parseFloat(value)) ? "" : value);
+  };
+
   const handleLayerChange = (index, field, value) => {
     const numericValue = parseFloat(value);
     if (numericValue < 0) return;
 
-    const updatedLayers = [...layers];
-    updatedLayers[index][field] = value;
-    setLayers(updatedLayers);
-    calculateResistance(updatedLayers);
+    setLayers((prev) => {
+      const newLayers = [...prev];
+      newLayers[index] = { ...newLayers[index], [field]: value };
+      return newLayers;
+    });
   };
 
   const handleMaterialChange = (index, value) => {
     const selectedMaterial = materials.find((mat) => mat.name === value);
     if (!selectedMaterial) return;
 
-    const updatedLayers = [...layers];
-    updatedLayers[index] = { ...updatedLayers[index], h: selectedMaterial.value, material: value };
-    setLayers(updatedLayers);
-  };
-
-  useEffect(() => {
-    calculateResistance(layers);
-  }, [layers]);
-  useEffect(() => {
-    calculateHeatFlux();
-  }, [totalResistance, deltaT]);
-
-  const handleNumericInput = (value, setter) => {
-    const sanitizedValue = value.replace(/[^0-9.]/g, "").replace(/^(\d*\.\d*)\./g, "$1");
-
-    const numericValue = parseFloat(sanitizedValue);
-    if (!isNaN(numericValue) && numericValue >= 0) {
-      setter(sanitizedValue);
-    } else if (sanitizedValue === "") {
-      setter("");
-    }
+    setLayers((prev) => {
+      const newLayers = [...prev];
+      newLayers[index] = { ...newLayers[index], h: selectedMaterial.value, material: value };
+      return newLayers;
+    });
   };
 
   const addLayer = () => {
@@ -66,30 +68,24 @@ const HeatTransferCalculator = () => {
   };
 
   const removeLayer = (index) => {
-    if (layers.length === 1) return;
-    setLayers(layers.filter((_, i) => i !== index));
+    if (layers.length > 1) {
+      setLayers(layers.filter((_, i) => i !== index));
+    }
   };
 
-  const calculateResistance = (updatedLayers = layers) => {
-    let totalResistance = updatedLayers.reduce((acc, layer) => {
+  const calculateResistance = () => {
+    let total = layers.reduce((acc, layer) => {
       const h = parseFloat(layer.h);
       const a = parseFloat(layer.a);
-
-      if (isNaN(h) || isNaN(a) || h <= 0 || a <= 0) return acc;
-
-      return acc + (1 / (h * a));
+      return isNaN(h) || isNaN(a) || h <= 0 || a <= 0 ? acc : acc + (1 / (h * a));
     }, 0);
 
-    setTotalResistance(totalResistance);
+    setTotalResistance(total);
   };
 
   const calculateHeatFlux = () => {
-    if (totalResistance === 0 || isNaN(totalResistance)) {
-      setHeatFlux("0.00");
-      return;
-    }
-    const deltaTValue = parseFloat(deltaT) || 0;
-    if (isNaN(deltaTValue) || deltaTValue <= 0) {
+    const deltaTValue = parseFloat(deltaT);
+    if (totalResistance === 0 || isNaN(deltaTValue) || deltaTValue <= 0) {
       setHeatFlux("0.00");
       return;
     }
@@ -97,13 +93,28 @@ const HeatTransferCalculator = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: 600, margin: "50px auto", padding: "30px", borderRadius: "16px", boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)", backgroundColor: "#fff", textAlign: "center" }}>
+    <Box sx={{ maxWidth: 600, margin: "50px auto", padding: "30px", borderRadius: "16px", boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)", backgroundColor: theme.palette.background.paper, textAlign: "center" }}>
       <Typography variant="h4" gutterBottom>
         Transferência de Calor por Convecção
       </Typography>
 
-      <TextField label="Diferença de Temperatura (ΔT em K)" type="text" value={deltaT} onChange={(e) => handleNumericInput(e.target.value, setDeltaT)} fullWidth margin="normal" />
-      <TextField label="Área (m²)" type="text" value={area} onChange={(e) => handleNumericInput(e.target.value, setArea)} fullWidth margin="normal" />
+      <TextField 
+        label="Diferença de Temperatura (ΔT em K)" 
+        type="text" 
+        value={deltaT} 
+        onChange={handleInputChange(setDeltaT)} 
+        fullWidth 
+        margin="normal" 
+      />
+
+      <TextField 
+        label="Área (m²)" 
+        type="text" 
+        value={area} 
+        onChange={handleInputChange(setArea)} 
+        fullWidth 
+        margin="normal" 
+      />
 
       <Typography variant="h6" gutterBottom>Camadas</Typography>
       {layers.map((layer, index) => (
@@ -125,11 +136,24 @@ const HeatTransferCalculator = () => {
         </Box>
       ))}
 
-      <Button variant="outlined" onClick={addLayer} startIcon={<AddCircleIcon />} sx={{ marginBottom: "10px", color: "#7300ff", borderColor: "#7300ff", "&:hover": { backgroundColor: "#7300ff", color: "white" } }}>Adicionar Camada</Button>
+      <Button 
+        variant="outlined" 
+        onClick={addLayer} 
+        startIcon={<AddCircleIcon />} 
+        sx={{ marginBottom: "10px", color: "#7300ff", borderColor: "#7300ff", "&:hover": { backgroundColor: "#7300ff", color: "white" } }}
+      >
+        Adicionar Camada
+      </Button>
 
-      <Button variant="contained" onClick={() => { calculateResistance(); calculateHeatFlux(); }} sx={{ display: "block", margin: "10px auto", backgroundColor: "#007BFF", "&:hover": { backgroundColor: "#0056b3" } }}>Calcular</Button>
+      <Button 
+        variant="contained" 
+        onClick={calculateResistance} 
+        sx={{ display: "block", margin: "10px auto", backgroundColor: "#007BFF", "&:hover": { backgroundColor: "#0056b3" } }}
+      >
+        Calcular
+      </Button>
 
-      <Box sx={{ marginTop: "20px", padding: "15px", borderRadius: "8px", backgroundColor: "#f4f4f4" }}>
+      <Box sx={{ marginTop: "20px", padding: "15px", borderRadius: "8px", backgroundColor: theme.palette.background.paper}}>
         <Typography variant="h6">Resultados</Typography>
         <TextField label="Resistência Térmica Total (K/W)" value={totalResistance.toFixed(6)} fullWidth margin="normal" InputProps={{ readOnly: true }} />
         <TextField label="Fluxo de Calor (Q) em Watts" value={heatFlux} fullWidth margin="normal" InputProps={{ readOnly: true }} />
