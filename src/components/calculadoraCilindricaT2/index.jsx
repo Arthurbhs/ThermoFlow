@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { Box, TextField, Button, Typography, useTheme, IconButton } from "@mui/material";
+import {
+  Box,
+  TextField,
+  Button,
+  Typography,
+  IconButton,
+  useTheme,
+} from "@mui/material";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 
@@ -7,7 +14,7 @@ const CylindricalConvection = () => {
   const theme = useTheme();
   const [deltaT, setDeltaT] = useState("");
   const [layers, setLayers] = useState([{ length: "", radius: "", h: "" }]);
-  const [length, setLength] = useState("");
+
   const [totalResistance, setTotalResistance] = useState(0);
   const [heatFlux, setHeatFlux] = useState(0);
 
@@ -17,7 +24,7 @@ const CylindricalConvection = () => {
       setter(value);
     }
   };
-  
+
   const handleLayerChange = (index, field, value) => {
     if (/^-?\d*\.?\d*$/.test(value)) {
       setLayers((prevLayers) =>
@@ -27,7 +34,7 @@ const CylindricalConvection = () => {
       );
     }
   };
-  
+
   const addLayer = () => {
     setLayers([...layers, { length: "", radius: "", h: "" }]);
   };
@@ -37,14 +44,12 @@ const CylindricalConvection = () => {
   };
 
   const handleCalculate = () => {
-    if (!deltaT || layers.some(layer => !layer.length || !layer.radius || !layer.h)) return;
-
     let totalRes = 0;
     layers.forEach((layer) => {
       const L = parseFloat(layer.length);
       const r = parseFloat(layer.radius);
       const hValue = parseFloat(layer.h);
-      
+
       if (!isNaN(L) && !isNaN(r) && !isNaN(hValue) && L > 0 && r > 0 && hValue > 0) {
         const area = 2 * Math.PI * r * L;
         totalRes += 1 / (hValue * area);
@@ -52,13 +57,28 @@ const CylindricalConvection = () => {
     });
 
     setTotalResistance(totalRes);
-    setHeatFlux(totalRes > 0 ? (parseFloat(deltaT) / totalRes).toFixed(2) : "0.00");
+    if (totalRes > 0) {
+      setHeatFlux((parseFloat(deltaT || 0) / totalRes).toFixed(2));
+    } else {
+      setHeatFlux("0.00");
+    }
   };
 
   return (
-    <Box sx={{ maxWidth: 500, margin: "50px auto", padding: "30px", borderRadius: "16px", boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
-      backgroundColor: theme.palette.background.paper, textAlign: "center" }}>
-      <Typography variant="h4" gutterBottom>Transferência de Calor em Estruturas Cilíndricas</Typography>
+    <Box
+      sx={{
+        maxWidth: 500,
+        margin: "50px auto",
+        padding: "30px",
+        borderRadius: "16px",
+        boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
+        backgroundColor: theme.palette.background.paper,
+        textAlign: "center",
+      }}
+    >
+      <Typography variant="h4" gutterBottom>
+        Transferência de Calor por Convecção
+      </Typography>
 
       <TextField
         label="Diferença de Temperatura (ΔT em K)"
@@ -68,7 +88,9 @@ const CylindricalConvection = () => {
         margin="normal"
       />
 
-      <Typography variant="h6" gutterBottom>Camadas</Typography>
+      <Typography variant="h6" gutterBottom>
+        Camadas
+      </Typography>
       {layers.map((layer, index) => (
         <Box key={index} sx={{ marginBottom: "15px", textAlign: "center" }}>
           <TextField
@@ -104,7 +126,12 @@ const CylindricalConvection = () => {
         variant="outlined"
         onClick={addLayer}
         startIcon={<AddCircleIcon />}
-        sx={{ marginBottom: "20px", color: "#7300ff", borderColor: "#7300ff", "&:hover": { backgroundColor: "#7300ff", color: "white" } }}
+        sx={{
+          marginBottom: "20px",
+          color: "#7300ff",
+          borderColor: "#7300ff",
+          "&:hover": { backgroundColor: "#7300ff", color: "white" },
+        }}
       >
         Adicionar Camada
       </Button>

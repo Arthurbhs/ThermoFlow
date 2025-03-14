@@ -23,6 +23,17 @@ const HeatTransferCalculator = () => {
   const [area, setArea] = useState(1);
   const [totalResistance, setTotalResistance] = useState(0);
   const [heatFlux, setHeatFlux] = useState("0.00");
+  
+  const isFormValid = () => {
+    if (!deltaT || !area || parseFloat(deltaT) <= 0 || parseFloat(area) <= 0) return false;
+    
+    for (let layer of layers) {
+      if (!layer.material || !layer.h || parseFloat(layer.h) <= 0 || parseFloat(layer.a) <= 0) {
+        return false;
+      }
+    }
+    return true;
+  }
 
   useEffect(() => {
     setLayers((prevLayers) => prevLayers.map((layer) => ({ ...layer, a: area })));
@@ -146,12 +157,13 @@ const HeatTransferCalculator = () => {
       </Button>
 
       <Button 
-        variant="contained" 
-        onClick={calculateResistance} 
-        sx={{ display: "block", margin: "10px auto", backgroundColor: "#007BFF", "&:hover": { backgroundColor: "#0056b3" } }}
-      >
-        Calcular
-      </Button>
+  variant="contained" 
+  onClick={() => { calculateResistance(); calculateHeatFlux(); }} 
+  disabled={!isFormValid()} 
+  sx={{ display: "block", margin: "10px auto", backgroundColor: isFormValid() ? "#007BFF" : "#ccc", "&:hover": { backgroundColor: isFormValid() ? "#0056b3" : "#ccc" } }}
+>
+  Calcular
+</Button>
 
       <Box sx={{ marginTop: "20px", padding: "15px", borderRadius: "8px", backgroundColor: theme.palette.background.paper}}>
         <Typography variant="h6">Resultados</Typography>

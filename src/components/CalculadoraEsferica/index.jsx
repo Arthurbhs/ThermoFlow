@@ -30,12 +30,31 @@ const SphericalHeatTransfer = () => {
   };
 
   const handleLayerChange = (index, field, value) => {
-    if (/^\d*\.?\d*$/.test(value)) {
+    if (value === "" || /^\d*\.?\d*$/.test(value)) {
       const updatedLayers = [...layers];
       updatedLayers[index][field] = value;
       setLayers(updatedLayers);
     }
   };
+  
+  
+
+  const isFormValid = () => {
+    if (!deltaT || isNaN(parseFloat(deltaT)) || parseFloat(deltaT) <= 0) return false;
+    return layers.every(layer => {
+      const k = parseFloat(layer.k);
+      const r1 = parseFloat(layer.r1);
+      const r2 = parseFloat(layer.r2);
+  
+      return (
+        !isNaN(k) && k > 0 &&
+        !isNaN(r1) && r1 > 0 &&
+        !isNaN(r2) && r2 > r1
+      );
+    });
+  };
+  
+  
 
   const handleMaterialChange = (index, value) => {
     setLayers((prevLayers) =>
@@ -117,7 +136,7 @@ const SphericalHeatTransfer = () => {
                   </Typography>
                   <TextField
   label="Raio Interno (m)"
-  type="number"
+  
   value={layer.r1}
   onChange={(e) => handleLayerChange(index, "r1", e.target.value)}
   fullWidth
@@ -127,6 +146,7 @@ const SphericalHeatTransfer = () => {
 />
 
           <TextField
+          
             label="Raio Externo (m)"
             value={layer.r2}
             onChange={(e) => handleLayerChange(index, "r2", e.target.value)}
@@ -143,18 +163,20 @@ const SphericalHeatTransfer = () => {
       </Button>
 
       <Button
-  variant="contained"
-  onClick={calculateResistanceAndHeatFlux}
-  sx={{
-    display: "block",
-    margin: "10px auto",
-    backgroundColor: "#007BFF",
-    "&:hover": { backgroundColor: "#0056b3" },
-  }}
->
-  Calcular
-</Button>
-
+             variant="contained"
+             onClick={() => {
+              calculateResistanceAndHeatFlux();
+             }}
+             disabled={!isFormValid()}
+             sx={{
+               display: "block",
+               margin: "10px auto",
+               backgroundColor: isFormValid() ? "#007BFF" : "#b0c4de",
+               "&:hover": { backgroundColor: isFormValid() ? "#0056b3" : "#b0c4de" },
+             }}
+           >
+             Calcular
+           </Button>
 
       <Box sx={{ marginTop: "20px", padding: "15px", borderRadius: "8px",  backgroundColor: theme.palette.background.paper}}>
         <Typography variant="h6">Resultados</Typography>
