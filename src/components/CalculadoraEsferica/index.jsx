@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Box, TextField, Button, Typography, IconButton, MenuItem, Select, FormControl, InputLabel, useTheme } from "@mui/material";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
+import History from "./components/History";
+
 
 
 const materials = [
@@ -22,6 +24,7 @@ const SphericalHeatTransfer = () => {
   const [deltaT, setDeltaT] = useState("");
   const [totalResistance, setTotalResistance] = useState(0);
   const [heatFlux, setHeatFlux] = useState("0.00");
+    const [history, setHistory] = useState([]);
 
   const handleNumericInput = (value, setter) => {
     if (/^\d*\.?\d*$/.test(value)) {
@@ -37,8 +40,19 @@ const SphericalHeatTransfer = () => {
     }
   };
   
+  useEffect(() => {
+    const savedHistory = JSON.parse(localStorage.getItem("heatTransferHistory")) || [];
+    setHistory(savedHistory);
+  }, []);
   
-
+  const saveToHistory = (newEntry) => {
+    const updatedHistory = [newEntry, ...history.slice(0, 4)]; // Mantém os 5 últimos cálculos
+    setHistory(updatedHistory);
+    localStorage.setItem("heatTransferHistory", JSON.stringify(updatedHistory));
+  };
+  
+  
+  
   const isFormValid = () => {
     if (!deltaT || isNaN(parseFloat(deltaT)) || parseFloat(deltaT) <= 0) return false;
     return layers.every(layer => {
@@ -97,11 +111,28 @@ const SphericalHeatTransfer = () => {
     setTotalResistance(totalRes);
   
     if (totalRes > 0) {
-      setHeatFlux((parseFloat(deltaT || 0) / totalRes).toFixed(2));
+      const heatFluxValue = (parseFloat(deltaT || 0) / totalRes).toFixed(2);
+      setHeatFlux(heatFluxValue);
+    
+      saveToHistory({
+        deltaT,
+        layers: layers.map(layer => ({
+          material: layer.material,
+          r1: layer.r1,
+          r2: layer.r2
+        })),
+        totalResistance: !isNaN(totalRes) ? Number(totalRes) : "N/A",
+        heatFlux: heatFluxValue, // Usar heatFluxValue em vez de heatFlux
+        timestamp: new Date().toLocaleString()
+      });
+    
     } else {
       setHeatFlux("0.00");
     }
+    
   };
+  
+  
   
 
   return (
@@ -165,7 +196,7 @@ const SphericalHeatTransfer = () => {
       <Button
              variant="contained"
              onClick={() => {
-              calculateResistanceAndHeatFlux();
+              calculateResistanceAndHeatFlux(); 
              }}
              disabled={!isFormValid()}
              sx={{
@@ -183,8 +214,8 @@ const SphericalHeatTransfer = () => {
         <TextField label="Resistência Térmica Total (K/W)" value={totalResistance.toFixed(6)} fullWidth margin="normal" InputProps={{ readOnly: true }} />
         <TextField label="Fluxo de Calor (Q) em Watts" value={heatFlux} fullWidth margin="normal" InputProps={{ readOnly: true }} />
       </Box>
+<History historyData={history}/>
 
-     
     </Box>
   );
 };

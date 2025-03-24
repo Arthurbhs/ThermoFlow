@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect} from "react";
 import {
   Box,
   TextField,
@@ -13,6 +13,8 @@ import {
 } from "@mui/material";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
+import History from "./componentes/History";
+
 
 const CylindricalConduction = () => {
   const theme = useTheme();
@@ -21,7 +23,7 @@ const CylindricalConduction = () => {
   const [material, setMaterial] = useState("");  // Material selecionado
   const [totalResistance, setTotalResistance] = useState(0);
   const [heatFlux, setHeatFlux] = useState(0);
-
+  const [history, setHistory] = useState([]);
   const materials = {
     "Alumínio": 205,  // Condutividade térmica em W/m·K
     "Cobre": 385,
@@ -41,41 +43,104 @@ const CylindricalConduction = () => {
     }
   };
 
-  const addLayer = () => {
-    setLayers([...layers, { length: "", radius: "", k: "" }]);
-  };
 
+  useEffect(() => {
+    if (totalResistance > 0) {
+      saveToHistory(totalResistance);
+    }
+  }, [totalResistance]); // Executa quando totalResistance for atualizado
+  
+
+  useEffect(() => {
+    // Recupera histórico salvo ao carregar o componente
+    const storedHistory = JSON.parse(localStorage.getItem("heatTransferHistory")) || [];
+    setHistory(storedHistory);
+  }, []);
+  const handleCalculate = () => {
+    let totalRes = 0;
+    let valid = true;
+  
+    layers.forEach((layer) => {
+      const L = parseFloat(layer.length);
+      const r1 = parseFloat(layer.radius1);
+      const r2 = parseFloat(layer.radius2);
+      const kValue = parseFloat(layer.k);
+  
+      if (isNaN(L) || isNaN(r1) || isNaN(r2) || isNaN(kValue) || L <= 0 || r1 <= 0 || r2 <= r1 || kValue <= 0) {
+        valid = false;
+        return;
+      }
+  
+      totalRes += Math.log(r2 / r1) / (2 * Math.PI * kValue * L);
+    });
+  
+    if (valid && deltaT) {
+      const parsedDeltaT = parseFloat(deltaT);
+      if (!isNaN(parsedDeltaT)) {
+        setTotalResistance(totalRes);
+        setHeatFlux((parsedDeltaT / totalRes).toFixed(2));
+      }
+    } else {
+      alert("Erro: Certifique-se de que todos os valores são válidos e que o raio externo é maior que o raio interno.");
+    }
+  };
+  
+
+  
+  const saveToHistory = (totalRes) => {
+    const newEntry = {
+      deltaT,
+      totalResistance: Number(totalRes).toFixed(6),
+      heatFlux: (parseFloat(deltaT) / totalRes).toFixed(2),
+      layers: layers.map(layer => ({
+        material: layer.material || "Desconhecido",
+        length: layer.length || "0",
+        radius1: layer.radius1 || "0",
+        radius2: layer.radius2 || "0"
+      })),
+      timestamp: new Date().toLocaleString(),
+    };
+  
+    let storedHistory = JSON.parse(localStorage.getItem("heatTransferHistory")) || [];
+    storedHistory.unshift(newEntry);
+  
+    if (storedHistory.length > 3) {
+      storedHistory = storedHistory.slice(0, 3);
+    }
+  
+    localStorage.setItem("heatTransferHistory", JSON.stringify(storedHistory));
+    setHistory([...storedHistory]);
+  };
+  
+ 
+
+  const addLayer = () => {
+    setLayers((prevLayers) => [...prevLayers, { length: "", radius1: "", radius2: "", k: "" }]);
+  };
+  
   const removeLayer = (index) => {
     setLayers(layers.filter((_, i) => i !== index));
   };
 
-  const handleMaterialChange = (event) => {
-    setMaterial(event.target.value);
-    // Atualiza o valor de k com base no material selecionado
-    setLayers(layers.map((layer) => ({ ...layer, k: materials[event.target.value] || "" })));
+  const handleMaterialChange = (index, event) => {
+    const selectedMaterial = event.target.value;
+    setLayers((prevLayers) =>
+      prevLayers.map((layer, i) =>
+        i === index ? { ...layer, material: selectedMaterial, k: materials[selectedMaterial] } : layer
+      )
+    );
   };
+  
+  
 
-  const handleCalculate = () => {
-    let totalRes = 0;
-    layers.forEach((layer) => {
-      const L = parseFloat(layer.length);  // Comprimento
-      const r = parseFloat(layer.radius);  // Raio
-      const kValue = parseFloat(layer.k);  // Condutividade térmica
 
-      if (!isNaN(L) && !isNaN(r) && !isNaN(kValue) && L > 0 && r > 0 && kValue > 0) {
-        const area = Math.PI * Math.pow(r, 2);  // Área da seção transversal
-        totalRes += L / (kValue * area);  // Resistência térmica de cada camada
-      }
-    });
+  console.log("deltaT:", deltaT);
+console.log("layers:", layers);
+layers.forEach((layer, index) => {
+  console.log(`Camada ${index + 1}:`, layer);
+});
 
-    setTotalResistance(totalRes);
-    if (totalRes > 0) {
-      setHeatFlux((parseFloat(deltaT || 0) / totalRes).toFixed(2));  // Fluxo de calor
-    } else {
-      setHeatFlux("0.00");
-    }
-  };
-
+  
   return (
     <Box
       sx={{
@@ -105,20 +170,7 @@ const CylindricalConduction = () => {
         margin="normal"
       />
 
-      <FormControl fullWidth margin="normal">
-        <InputLabel>Material</InputLabel>
-        <Select
-          value={material}
-          onChange={handleMaterialChange}
-          label="Material"
-        >
-          {Object.keys(materials).map((materialName) => (
-            <MenuItem key={materialName} value={materialName}>
-              {materialName}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+    
 
       {/* Exibindo a Condutividade Térmica abaixo do Select */}
       <Typography variant="body1">
@@ -130,6 +182,21 @@ const CylindricalConduction = () => {
       </Typography>
       {layers.map((layer, index) => (
         <Box key={index} sx={{ marginBottom: "15px", textAlign: "center" }}>
+          <FormControl fullWidth margin="normal">
+            <InputLabel>Material</InputLabel>
+            <Select
+              value={layer.material}
+              onChange={(e) => handleMaterialChange(index, e)}
+              label="Material"
+            >
+              {Object.keys(materials).map((materialName) => (
+                <MenuItem key={materialName} value={materialName}>
+                  {materialName}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
           <TextField
             label="Comprimento do Cilindro (m)"
             value={layer.length}
@@ -139,12 +206,24 @@ const CylindricalConduction = () => {
           />
 
           <TextField
-            label="Raio Externo (m)"
-            value={layer.radius}
-            onChange={(e) => handleLayerChange(index, "radius", e.target.value)}
+            label="Raio Interno (m)"
+            value={layer.radius1}
+            onChange={(e) => handleLayerChange(index, "radius1", e.target.value)}
             fullWidth
             margin="normal"
           />
+
+          <TextField
+            label="Raio Externo (m)"
+            value={layer.radius2}
+            onChange={(e) => handleLayerChange(index, "radius2", e.target.value)}
+            fullWidth
+            margin="normal"
+          />
+
+          <Typography variant="body2">
+            Condutividade térmica: <strong>{layer.k ? `${layer.k} W/m.K` : "Selecione um material"}</strong>
+          </Typography>
 
           <IconButton onClick={() => removeLayer(index)} sx={{ color: "#9b00d9" }}>
             <RemoveCircleIcon />
@@ -167,18 +246,28 @@ const CylindricalConduction = () => {
       </Button>
 
       <Button
-        variant="contained"
-        onClick={handleCalculate}
-        disabled={!deltaT || layers.some(layer => !layer.length || !layer.radius)}
-        sx={{
-          display: "block",
-          margin: "10px auto",
-          backgroundColor: "#007BFF",
-          "&:hover": { backgroundColor: "#0056b3" },
-        }}
-      >
-        Calcular
-      </Button>
+  variant="contained"
+  onClick={handleCalculate} // Chamar diretamente
+  disabled={
+    !deltaT || 
+    layers.some(layer => 
+      !layer.length || !layer.radius1 || !layer.radius2 || !layer.k || 
+      parseFloat(layer.radius2) <= parseFloat(layer.radius1)
+    )
+  }
+  sx={{
+    display: "block",
+    margin: "10px auto",
+    backgroundColor: "#007BFF",
+    "&:hover": { backgroundColor: "#0056b3" },
+  }}
+>
+  Calcular
+</Button>
+
+
+
+
 
       <Box sx={{ marginTop: "20px", padding: "15px", borderRadius: "8px", backgroundColor: theme.palette.background.paper }}>
         <Typography variant="h6">Resultados</Typography>
@@ -197,6 +286,8 @@ const CylindricalConduction = () => {
           InputProps={{ readOnly: true }}
         />
       </Box>
+      <History historyData={history} /> 
+
     </Box>
   );
 };

@@ -1,12 +1,19 @@
-import React, { createContext, useState, useMemo } from "react";
+import React, { createContext, useState, useMemo, useEffect } from "react";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 
 export const ThemeContext = createContext();
 
 const ThemeProviderComponent = ({ children }) => {
-  // Estado para controlar o tema
-  const [darkMode, setDarkMode] = useState(false);
+  // Inicializa o tema com base no localStorage ou padrão claro
+  const [darkMode, setDarkMode] = useState(() => {
+    return localStorage.getItem("theme") === "dark";
+  });
+
+  // Atualiza o localStorage quando o tema muda
+  useEffect(() => {
+    localStorage.setItem("theme", darkMode ? "dark" : "light");
+  }, [darkMode]);
 
   // Alternar entre temas
   const toggleTheme = () => {
@@ -20,10 +27,10 @@ const ThemeProviderComponent = ({ children }) => {
         palette: {
           mode: darkMode ? "dark" : "light",
           primary: {
-            main: darkMode ? "#bb86fc" : "#7000b5", // Roxo escuro para claro e lilás para escuro
+            main: darkMode ? "#bb86fc" : "#7000b5",
           },
           background: {
-            default: darkMode ? "#121212" : "#f4f4f4", // Fundo escuro ou claro
+            default: darkMode ? "#121212" : "#f4f4f4",
             paper: darkMode ? "#1e1e1e" : "#ffffff",
           },
           text: {

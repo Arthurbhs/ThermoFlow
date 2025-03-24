@@ -19,11 +19,24 @@ const CalculadoraCoe = () => {
   const [hover, setHover] = useState(null);
 
   return (
-    <Box sx={{ margin: "0px -8px -60px -8px", textAlign: "center", minHeight: "100vh" }}>
+    <Box sx={{ 
+      textAlign: "center", 
+      minHeight: "100vh", 
+      width: "100vw", // Evita rolagem horizontal
+      overflowX: "hidden" // Esconde qualquer conteúdo extra na horizontal
+    }}>
       <Header />
 
       {!categoria ? (
-        <Box sx={{ display: "flex", justifyContent: "center", gap: 4, flexWrap: "wrap", margin: "20px 0" }}>
+        <Box 
+          sx={{ 
+            display: "flex", 
+            justifyContent: "center", 
+            gap: 4, 
+            flexWrap: "wrap", 
+            margin: "20px 0" 
+          }}
+        >
           {[
             { img: Conducao, type: "conducao" },
             { img: Conveccao, type: "conveccao"},
@@ -36,7 +49,8 @@ const CalculadoraCoe = () => {
                 cursor: "pointer",
                 overflow: "hidden",
                 borderRadius: "10%",
-                width: "350px",
+                width: "90%", // Ajustado para telas menores
+                maxWidth: "350px",
                 height: "auto",
                 margin: "10px",
               }}
@@ -45,7 +59,13 @@ const CalculadoraCoe = () => {
               onClick={() => {
                 setCategoria(type);
                 setSelecionado(type === "conducao" ? "plana1" : "plana2");
+                if (type === "conveccao") {
+                  window.history.pushState(null, "", "calculadora/conveccao");
+                } else {
+                  window.history.pushState(null, "", "calculadora/conducao");
+                }
               }}
+              
             >
               <img
                 src={img}
@@ -53,6 +73,7 @@ const CalculadoraCoe = () => {
                 style={{
                   width: "100%",
                   height: "100%",
+                  maxWidth: "100%", // Garante que não ultrapasse a tela
                   transition: "transform 0.3s ease",
                   transform: hover === type && !isMobile ? "scale(1.05)" : "none",
                 }}
@@ -71,7 +92,15 @@ const CalculadoraCoe = () => {
                   }}
                 />
               )}
-              <Box sx={{ position: "absolute", bottom: "10px", left: "10px", color: "white", backgroundColor: "rgba(0, 0, 0, 0.5)", padding: "5px", borderRadius: "5px" }}>
+              <Box sx={{ 
+                position: "absolute", 
+                bottom: "10px", 
+                left: "10px", 
+                color: "white", 
+                backgroundColor: "rgba(0, 0, 0, 0.5)", 
+                padding: "5px", 
+                borderRadius: "5px" 
+              }}>
                 <Typography variant="h6">{label}</Typography>
               </Box>
             </Box>
@@ -79,7 +108,15 @@ const CalculadoraCoe = () => {
         </Box>
       ) : (
         <>
-          <ButtonGroup variant="contained" sx={{ margin: "20px 0" }}>
+          <ButtonGroup 
+            variant="contained" 
+            sx={{ 
+              margin: "20px 0", 
+              display: "flex", 
+              flexWrap: "wrap", // Evita que os botões causem rolagem
+              justifyContent: "center"
+            }}
+          >
             {categoria === "conducao" ? (
               <>
                 <Button onClick={() => setSelecionado("plana1")} variant={selecionado === "plana1" ? "contained" : "outlined"}>Plana</Button>
@@ -96,17 +133,19 @@ const CalculadoraCoe = () => {
           </ButtonGroup>
 
           <Box sx={{ display: "flex", justifyContent: "center" }}>
-            <Button
-              onClick={() => {
-                setCategoria(null);
-                setSelecionado(null);
-                setHover(null);
-              }}
-              variant="outlined"
-              sx={{ marginBottom: 5, marginRight: 2.5 }}
-            >
-              Voltar
-            </Button>
+          <Button
+  onClick={() => {
+    setCategoria(null);
+    setSelecionado(null);
+    setHover(null);
+    window.history.pushState(null, "", "/calculadora"); // Restaura a URL original
+  }}
+  variant="outlined"
+  sx={{ marginBottom: 5, marginRight: 2.5 }}
+>
+  Voltar
+</Button>
+
           </Box>
         </>
       )}
