@@ -3,20 +3,9 @@ import { Box, TextField, Button, Typography, IconButton, MenuItem, Select, FormC
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import History from "./components/History";
+import MaterialSelector from "../materialSelector";
 
 
-
-const materials = [
-  { name: "Selecione um material", value: "" },
-  { name: "Cobre", value: 385 },
-  { name: "Alumínio", value: 205 },
-  { name: "Ferro", value: 80 },
-  { name: "Aço Inoxidável", value: 15 },
-  { name: "Madeira", value: 0.15 },
-  { name: "Isopor", value: 0.035 },
-  { name: "Lã de Vidro", value: 0.04 },
-  { name: "Concreto", value: 1.4 },
-];
 
 const SphericalHeatTransfer = () => {
   const theme = useTheme();
@@ -25,6 +14,24 @@ const SphericalHeatTransfer = () => {
   const [totalResistance, setTotalResistance] = useState(0);
   const [heatFlux, setHeatFlux] = useState("0.00");
     const [history, setHistory] = useState([]);
+     const [materials, setMaterials] = useState([]);
+
+    useEffect(() => {
+      fetch("https://materialsapi.onrender.com/materials")  // Substitua pela URL da API hospedada
+        .then(response => response.json())
+        .then(data => {
+          const formattedMaterials = [{ name: "Selecione um material", value: "" }, 
+            ...data.map(metal => ({
+              name: metal.name,
+              value: metal.thermalConductivity,
+              symbol: metal.symbol
+            }))
+          ];
+          setMaterials(formattedMaterials);
+        })
+        .catch(error => console.error("Erro ao carregar materiais:", error));
+    }, []);
+    
 
   const handleNumericInput = (value, setter) => {
     if (/^\d*\.?\d*$/.test(value)) {
@@ -41,14 +48,14 @@ const SphericalHeatTransfer = () => {
   };
   
   useEffect(() => {
-    const savedHistory = JSON.parse(localStorage.getItem("heatTransferHistory")) || [];
+    const savedHistory = JSON.parse(localStorage.getItem("condEsfHistory")) || [];
     setHistory(savedHistory);
   }, []);
   
   const saveToHistory = (newEntry) => {
     const updatedHistory = [newEntry, ...history.slice(0, 4)]; // Mantém os 5 últimos cálculos
     setHistory(updatedHistory);
-    localStorage.setItem("heatTransferHistory", JSON.stringify(updatedHistory));
+    localStorage.setItem("condEsfHistory", JSON.stringify(updatedHistory));
   };
   
   
@@ -154,17 +161,6 @@ const SphericalHeatTransfer = () => {
       </Typography>
       {layers.map((layer, index) => (
          <Box key={index} sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
-                  <FormControl fullWidth>
-                    <InputLabel>Material</InputLabel>
-                    <Select value={layer.material} onChange={(e) => handleMaterialChange(index, e.target.value)}>
-                      {materials.map((mat, i) => (
-                        <MenuItem key={i} value={mat.name}>{mat.name}</MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                  <Typography variant="body1">
-                    Condutividade térmica (k): <strong>{layer.k ? `${layer.k} W/m.K` : "Selecione um material"}</strong>
-                  </Typography>
                   <TextField
   label="Raio Interno (m)"
   
@@ -175,14 +171,22 @@ const SphericalHeatTransfer = () => {
   error={layer.r1 !== "" && (isNaN(layer.r1) || parseFloat(layer.r1) <= 0)}
   helperText={layer.r1 !== "" && parseFloat(layer.r1) <= 0 ? "Valor deve ser maior que zero" : ""}
 />
-
-          <TextField
+   <TextField
           
             label="Raio Externo (m)"
             value={layer.r2}
             onChange={(e) => handleLayerChange(index, "r2", e.target.value)}
             fullWidth
           />
+            <MaterialSelector
+  materials={materials}
+  selectedMaterial={layer.material}
+  onChange={(value) => handleMaterialChange(index, value)}
+/>
+
+                  <Typography variant="body1">
+                    Condutividade térmica (k): <strong>{layer.k ? `${layer.k} W/m.K` : "Selecione um material"}</strong>
+                  </Typography>
           <IconButton onClick={() => removeLayer(index)} sx={{ color: "#9b00d9" }}>
             <RemoveCircleIcon />
           </IconButton>

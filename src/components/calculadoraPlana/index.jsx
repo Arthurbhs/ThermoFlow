@@ -6,17 +6,11 @@ import {
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import History from "./components/History";
+import MaterialSelector from "../materialSelector";
 
 
-const materials = [
-  { name: "Selecione um material", value: "" },
-  { name: "Ar", value: 10 },
-  { name: "Água", value: 500 },
-  { name: "Óleo", value: 50 },
-  { name: "Ar em Movimento", value: 25 },
-  { name: "Superfície Metálica", value: 100 },
-  { name: "Superfície Plástica", value: 5 },
-];
+
+
 
 const HeatTransferCalculator = () => {
   const theme = useTheme();
@@ -26,9 +20,27 @@ const HeatTransferCalculator = () => {
   const [totalResistance, setTotalResistance] = useState(0);
   const [heatFlux, setHeatFlux] = useState("0.00");
   const [history, setHistory] = useState([]);
+  const [materials, setMaterials] = useState([]);
+
+useEffect(() => {
+  fetch("https://materialsapi.onrender.com/materials")  // Substitua pela URL da API hospedada
+    .then(response => response.json())
+    .then(data => {
+      const formattedMaterials = [{ name: "Selecione um material", value: "" }, 
+        ...data.map(metal => ({
+          name: metal.name,
+          value: metal.thermalConductivity,
+          symbol: metal.symbol
+        }))
+      ];
+      setMaterials(formattedMaterials);
+    })
+    .catch(error => console.error("Erro ao carregar materiais:", error));
+}, []);
+
 
   useEffect(() => {
-    const savedHistory = JSON.parse(localStorage.getItem("heatTransferHistory")) || [];
+    const savedHistory = JSON.parse(localStorage.getItem("condPlanHistoy")) || [];
     setHistory(savedHistory);
   }, []);
   useEffect(() => {
@@ -60,7 +72,7 @@ const HeatTransferCalculator = () => {
   
     const updatedHistory = [newEntry, ...history.slice(0, 2)]; // Mantém apenas os 3 últimos cálculos
     setHistory(updatedHistory);
-    localStorage.setItem("heatTransferHistory", JSON.stringify(updatedHistory));
+    localStorage.setItem("condPlanHistoy", JSON.stringify(updatedHistory));
   };
   
 
@@ -71,13 +83,15 @@ const HeatTransferCalculator = () => {
  
   const calculateResistance = () => {
     let total = layers.reduce((acc, layer) => {
-      const h = parseFloat(layer.h);
+      const k = parseFloat(layer.h); // Agora `h` é a condutividade térmica
       const a = parseFloat(layer.a);
-      return isNaN(h) || isNaN(a) || h <= 0 || a <= 0 ? acc : acc + (1 / (h * a));
+      
+      return isNaN(k) || isNaN(a) || k <= 0 || a <= 0 ? acc : acc + (1 / (k * a));
     }, 0);
+    
     setTotalResistance(total);
   };
-
+  
   const calculateHeatFlux = () => {
     const deltaTValue = parseFloat(deltaT);
     if (isNaN(deltaTValue) || deltaTValue <= 0 || totalResistance <= 0) {
@@ -121,15 +135,20 @@ const HeatTransferCalculator = () => {
   
 
   const handleMaterialChange = (index, value) => {
-    const selectedMaterial = materials.find((mat) => mat.name === value);
+    const selectedMaterial = materials.find(mat => mat.name === value);
     if (!selectedMaterial) return;
-
-    setLayers((prev) => {
+  
+    setLayers(prev => {
       const newLayers = [...prev];
-      newLayers[index] = { ...newLayers[index], h: selectedMaterial.value, material: value };
+      newLayers[index] = { 
+        ...newLayers[index], 
+        h: selectedMaterial.value, // Agora usa a thermalConductivity da API
+        material: value 
+      };
       return newLayers;
     });
   };
+  
 
   const addLayer = () => {
     setLayers([...layers, { h: "", a: area, material: "" }]);
@@ -170,16 +189,13 @@ const HeatTransferCalculator = () => {
   margin="normal" 
 />
 
+<MaterialSelector
+  materials={materials}
+  selectedMaterial={layer.material}
+  onChange={(value) => handleMaterialChange(index, value)}
+/>
 
-          <FormControl fullWidth>
-            <InputLabel>Material</InputLabel>
-            <Select value={layer.material} onChange={(e) => handleMaterialChange(index, e.target.value)}>
-              {materials.map((mat, i) => (
-                <MenuItem key={i} value={mat.name}>{mat.name}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <Typography variant="body1">
+     <Typography variant="body1">
             Coeficiente de convecção (h): <strong>{layer.h ? `${layer.h} W/m²K` : "Selecione um material"}</strong>
           </Typography>
           <IconButton onClick={() => removeLayer(index)} sx={{ color: "#9b00d9" }}>

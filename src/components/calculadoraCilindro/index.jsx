@@ -1,19 +1,9 @@
 import React, { useState, useEffect} from "react";
-import {
-  Box,
-  TextField,
-  Button,
-  Typography,
-  IconButton,
-  useTheme,
-  MenuItem,
-  Select,
-  InputLabel,
-  FormControl,
-} from "@mui/material";
+import {Box,TextField,Button,Typography,IconButton,useTheme,MenuItem,Select,InputLabel,FormControl,} from "@mui/material";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import History from "./componentes/History";
+import MaterialSelector from "../materialSelector";
 
 
 const CylindricalConduction = () => {
@@ -24,14 +14,23 @@ const CylindricalConduction = () => {
   const [totalResistance, setTotalResistance] = useState(0);
   const [heatFlux, setHeatFlux] = useState(0);
   const [history, setHistory] = useState([]);
-  const materials = {
-    "Alumínio": 205,  // Condutividade térmica em W/m·K
-    "Cobre": 385,
-    "Aço": 50,
-    "Madeira": 0.14,
-    "Vidro": 1.05,
-    "Água": 0.606,
-  };
+ const [materials, setMaterials] = useState([]);
+
+    useEffect(() => {
+      fetch("https://materialsapi.onrender.com/materials")  // Substitua pela URL da API hospedada
+        .then(response => response.json())
+        .then(data => {
+          const formattedMaterials = [{ name: "Selecione um material", value: "" }, 
+            ...data.map(metal => ({
+              name: metal.name,
+              value: metal.thermalConductivity,
+              symbol: metal.symbol
+            }))
+          ];
+          setMaterials(formattedMaterials);
+        })
+        .catch(error => console.error("Erro ao carregar materiais:", error));
+    }, []);
 
   const handleLayerChange = (index, field, value) => {
     if (/^-?\d*\.?\d*$/.test(value)) {
@@ -53,7 +52,7 @@ const CylindricalConduction = () => {
 
   useEffect(() => {
     // Recupera histórico salvo ao carregar o componente
-    const storedHistory = JSON.parse(localStorage.getItem("heatTransferHistory")) || [];
+    const storedHistory = JSON.parse(localStorage.getItem("condCilHistory")) || [];
     setHistory(storedHistory);
   }, []);
   const handleCalculate = () => {
@@ -101,14 +100,14 @@ const CylindricalConduction = () => {
       timestamp: new Date().toLocaleString(),
     };
   
-    let storedHistory = JSON.parse(localStorage.getItem("heatTransferHistory")) || [];
+    let storedHistory = JSON.parse(localStorage.getItem("condCilHistory")) || [];
     storedHistory.unshift(newEntry);
   
     if (storedHistory.length > 3) {
       storedHistory = storedHistory.slice(0, 3);
     }
   
-    localStorage.setItem("heatTransferHistory", JSON.stringify(storedHistory));
+    localStorage.setItem("condCilHistory", JSON.stringify(storedHistory));
     setHistory([...storedHistory]);
   };
   
@@ -122,14 +121,21 @@ const CylindricalConduction = () => {
     setLayers(layers.filter((_, i) => i !== index));
   };
 
-  const handleMaterialChange = (index, event) => {
-    const selectedMaterial = event.target.value;
-    setLayers((prevLayers) =>
-      prevLayers.map((layer, i) =>
-        i === index ? { ...layer, material: selectedMaterial, k: materials[selectedMaterial] } : layer
-      )
-    );
+  const handleMaterialChange = (index, value) => {
+    const selectedMaterial = materials.find(mat => mat.name === value);
+    if (!selectedMaterial) return;
+  
+    setLayers(prev => {
+      const newLayers = [...prev];
+      newLayers[index] = { 
+        ...newLayers[index], 
+        k: selectedMaterial.value, // Agora usa a thermalConductivity corretamente
+        material: value 
+      };
+      return newLayers;
+    });
   };
+  
   
   
 
@@ -182,21 +188,7 @@ layers.forEach((layer, index) => {
       </Typography>
       {layers.map((layer, index) => (
         <Box key={index} sx={{ marginBottom: "15px", textAlign: "center" }}>
-          <FormControl fullWidth margin="normal">
-            <InputLabel>Material</InputLabel>
-            <Select
-              value={layer.material}
-              onChange={(e) => handleMaterialChange(index, e)}
-              label="Material"
-            >
-              {Object.keys(materials).map((materialName) => (
-                <MenuItem key={materialName} value={materialName}>
-                  {materialName}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
+        
           <TextField
             label="Comprimento do Cilindro (m)"
             value={layer.length}
@@ -220,6 +212,11 @@ layers.forEach((layer, index) => {
             fullWidth
             margin="normal"
           />
+            <MaterialSelector
+  materials={materials}
+  selectedMaterial={layer.material}
+  onChange={(value) => handleMaterialChange(index, value)}
+/>
 
           <Typography variant="body2">
             Condutividade térmica: <strong>{layer.k ? `${layer.k} W/m.K` : "Selecione um material"}</strong>

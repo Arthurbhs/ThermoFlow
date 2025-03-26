@@ -20,7 +20,7 @@ const CylindricalConvection = () => {
   const [history, setHistory] = useState([]);
 
   useEffect(() => {
-    const storedHistory = JSON.parse(localStorage.getItem("heatTransferHistory")) || [];
+    const storedHistory = JSON.parse(localStorage.getItem("ConvCilHistory")) || [];
     setHistory(storedHistory);
   }, []);
 
@@ -56,7 +56,7 @@ const CylindricalConvection = () => {
 
     setHistory(prevHistory => {
       const updatedHistory = [newEntry, ...prevHistory.slice(0, 2)];
-      localStorage.setItem("heatTransferHistory", JSON.stringify(updatedHistory));
+      localStorage.setItem("ConvCilHistory", JSON.stringify(updatedHistory));
       return updatedHistory;
     });
   };

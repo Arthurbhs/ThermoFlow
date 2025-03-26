@@ -13,7 +13,7 @@ const HeatTransferCalculator = () => {
   const [history, setHistory] = useState([]);
 
   useEffect(() => {
-    const storedHistory = JSON.parse(localStorage.getItem("heatTransferHistory")) || [];
+    const storedHistory = JSON.parse(localStorage.getItem("convPlanHistory")) || [];
     setHistory(storedHistory);
   }, []);
 
@@ -73,7 +73,7 @@ const HeatTransferCalculator = () => {
 
     setHistory(prevHistory => {
       const updatedHistory = [newEntry, ...prevHistory.slice(0, 2)];
-      localStorage.setItem("heatTransferHistory", JSON.stringify(updatedHistory));
+      localStorage.setItem("convPlanHistory", JSON.stringify(updatedHistory));
       return updatedHistory;
     });
   };
