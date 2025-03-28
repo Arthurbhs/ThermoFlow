@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Box, TextField, Button, Typography, IconButton, useTheme } from "@mui/material";
-import AddCircleIcon from "@mui/icons-material/AddCircle";
+import { Box, TextField, Typography, IconButton, useTheme } from "@mui/material";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import History from "./components/History";
+import ResultBox from "../resultBox";
+import CalculateButton from "../calculateButton";
+import AddLayerButton from "../addLayerButton";
 
 const HeatTransferCalculator = () => {
   const theme = useTheme();
@@ -22,6 +24,10 @@ const HeatTransferCalculator = () => {
       saveToHistory();
     }
   }, [totalResistance, heatFlux]);
+
+  const addLayer = () => {
+    setLayers([...layers, { h: "", a: "" }])
+  }
 
   const handleNumericInput = (value, setter) => {
     const sanitizedValue = value.replace(/[^0-9.]/g, "").replace(/^([0-9]*\.?[0-9]*).*$/, "$1");
@@ -90,13 +96,10 @@ const HeatTransferCalculator = () => {
           <IconButton onClick={() => setLayers(layers.filter((_, i) => i !== index))} sx={{ color: "#9b00d9" }}><RemoveCircleIcon /></IconButton>
         </Box>
       ))}
-      <Button variant="outlined" onClick={() => setLayers([...layers, { h: "", a: "" }])} startIcon={<AddCircleIcon />} sx={{ marginBottom: "10px", color: "#7300ff", borderColor: "#7300ff", "&:hover": { backgroundColor: "#7300ff", color: "white" } }}>Adicionar Camada</Button>
-      <Button variant="contained" onClick={calculateResistance} disabled={!isFormValid()} sx={{ display: "block", margin: "10px auto", backgroundColor: isFormValid() ? "#007BFF" : "#ccc", "&:hover": { backgroundColor: isFormValid() ? "#0056b3" : "#ccc" } }}>Calcular</Button>
-      <Box sx={{ marginTop: "20px", padding: "15px", borderRadius: "8px", backgroundColor: theme.palette.background.paper }}>
-        <Typography variant="h6">Resultados</Typography>
-        <TextField label="Resistência Térmica Total (K/W)" value={totalResistance.toFixed(6)} fullWidth margin="normal" InputProps={{ readOnly: true }} />
-        <TextField label="Fluxo de Calor (Q) em Watts" value={heatFlux} fullWidth margin="normal" InputProps={{ readOnly: true }} />
-      </Box>
+     
+     <AddLayerButton onClick={addLayer} />
+      <CalculateButton onClick={calculateResistance} isFormValid={isFormValid()}/>
+     <ResultBox totalResistance={totalResistance} heatFlux={heatFlux}/>
       <History historyData={history} />
     </Box>
   );

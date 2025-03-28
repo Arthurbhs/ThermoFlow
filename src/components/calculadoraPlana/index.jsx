@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { 
-  Box, TextField, Button, Typography, IconButton, MenuItem, Select, FormControl, 
-  InputLabel, useTheme 
-} from "@mui/material";
-import AddCircleIcon from "@mui/icons-material/AddCircle";
+import { Box, TextField, Typography, IconButton, useTheme } from "@mui/material";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import History from "./components/History";
 import MaterialSelector from "../materialSelector";
+import ResultBox from "../resultBox";
+import CalculateButton from "../calculateButton";
+import AddLayerButton from "../addLayerButton";
 
-
-
-
+const LOCAL_STORAGE_KEY = "condPlanHistory";
 
 const HeatTransferCalculator = () => {
   const theme = useTheme();
@@ -22,216 +19,95 @@ const HeatTransferCalculator = () => {
   const [history, setHistory] = useState([]);
   const [materials, setMaterials] = useState([]);
 
-useEffect(() => {
-  fetch("https://materialsapi.onrender.com/materials")  // Substitua pela URL da API hospedada
-    .then(response => response.json())
-    .then(data => {
-      const formattedMaterials = [{ name: "Selecione um material", value: "" }, 
-        ...data.map(metal => ({
-          name: metal.name,
-          value: metal.thermalConductivity,
-          symbol: metal.symbol
-        }))
-      ];
-      setMaterials(formattedMaterials);
-    })
-    .catch(error => console.error("Erro ao carregar materiais:", error));
-}, []);
-
+  useEffect(() => {
+    fetch("https://materialsapi.onrender.com/materials")
+      .then(response => response.json())
+      .then(data => {
+        const formattedMaterials = [
+          { name: "Selecione um material", value: "" },
+          ...data.map(metal => ({ name: metal.name, value: metal.thermalConductivity }))
+        ];
+        setMaterials(formattedMaterials);
+      })
+      .catch(error => console.error("Erro ao carregar materiais:", error));
+  }, []);
 
   useEffect(() => {
-    const savedHistory = JSON.parse(localStorage.getItem("condPlanHistoy")) || [];
+    const savedHistory = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) || [];
     setHistory(savedHistory);
   }, []);
+
   useEffect(() => {
     if (totalResistance > 0) {
       calculateHeatFlux();
     }
   }, [totalResistance]);
+
   useEffect(() => {
     if (heatFlux !== "0.00") {
       saveToHistory();
     }
   }, [heatFlux]);
-  
-  
 
-  const saveToHistory = () => {
-    const newEntry = {
-      deltaT,
-      area,
-      layers: layers.map(layer => ({
-        material: layer.material,
-        h: layer.h,
-        a: layer.a
-      })), 
-      totalResistance: typeof totalResistance === "number" ? totalResistance : 0,
-      heatFlux,
-      timestamp: new Date().toLocaleString(),
-    };
-  
-    const updatedHistory = [newEntry, ...history.slice(0, 2)]; // Mantém apenas os 3 últimos cálculos
-    setHistory(updatedHistory);
-    localStorage.setItem("condPlanHistoy", JSON.stringify(updatedHistory));
+  const handleNumericInput = (value, setter) => {
+    const sanitizedValue = value.replace(/[^0-9.]/g, "").replace(/^([0-9]*\.?[0-9]*).*$/, "$1");
+    setter(sanitizedValue);
   };
   
 
-  useEffect(() => {
-    setLayers((prev) => prev.map((layer) => ({ ...layer, a: area })));
-  }, [area]);
-
- 
-  const calculateResistance = () => {
-    let total = layers.reduce((acc, layer) => {
-      const k = parseFloat(layer.h); // Agora `h` é a condutividade térmica
-      const a = parseFloat(layer.a);
-      
-      return isNaN(k) || isNaN(a) || k <= 0 || a <= 0 ? acc : acc + (1 / (k * a));
-    }, 0);
-    
-    setTotalResistance(total);
+  const handleLayerChange = (index, field, value) => {
+    setLayers(prev => prev.map((layer, i) => (i === index ? { ...layer, [field]: value } : layer)));
   };
-  
-  const calculateHeatFlux = () => {
-    const deltaTValue = parseFloat(deltaT);
-    if (isNaN(deltaTValue) || deltaTValue <= 0 || totalResistance <= 0) {
-      setHeatFlux("0.00");
-      return;
-    }
-    const flux = (deltaTValue / totalResistance).toFixed(5);
-    setHeatFlux(flux);
-    saveToHistory();
-  };
-  
-  
- 
-  
-  const isFormValid = () => {
-    if (!deltaT || !area || parseFloat(deltaT) <= 0 || parseFloat(area) <= 0) return false;
-    
-    for (let layer of layers) {
-      if (!layer.material || !layer.h || parseFloat(layer.h) <= 0 || parseFloat(layer.a) <= 0) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-
-  const handleInputChange = (setter) => (e) => {
-    const value = e.target.value.replace(/[^0-9.]/g, "").replace(/^(\d*\.\d*)\./g, "$1");
-    setter(value === "" || isNaN(parseFloat(value)) ? "" : value);
-  };
-
-
-  const handleLayerAreaChange = (index, event) => {
-    const value = event.target.value.replace(/[^0-9.]/g, "").replace(/^(\d*\.\d*)\./g, "$1");
-    setLayers((prev) => {
-      const newLayers = [...prev];
-      newLayers[index] = { ...newLayers[index], a: value === "" || isNaN(parseFloat(value)) ? "" : value };
-      return newLayers;
-    });
-  };
-  
 
   const handleMaterialChange = (index, value) => {
     const selectedMaterial = materials.find(mat => mat.name === value);
     if (!selectedMaterial) return;
-  
-    setLayers(prev => {
-      const newLayers = [...prev];
-      newLayers[index] = { 
-        ...newLayers[index], 
-        h: selectedMaterial.value, // Agora usa a thermalConductivity da API
-        material: value 
-      };
-      return newLayers;
-    });
-  };
-  
-
-  const addLayer = () => {
-    setLayers([...layers, { h: "", a: area, material: "" }]);
+    
+    setLayers(prev => prev.map((layer, i) => (
+      i === index ? { ...layer, h: selectedMaterial.value, material: value } : layer
+    )));
   };
 
-  const removeLayer = (index) => {
-    if (layers.length > 1) {
-      setLayers(layers.filter((_, i) => i !== index));
-    }
+  const calculateResistance = () => {
+    let total = layers.reduce((acc, { h, a }) => acc + (1 / (parseFloat(h) * parseFloat(a) || 1)), 0);
+    setTotalResistance(total);
   };
-  console.log(history);
-  
+
+  const calculateHeatFlux = () => {
+    const deltaTValue = parseFloat(deltaT);
+    setHeatFlux(totalResistance > 0 ? (deltaTValue / totalResistance).toFixed(5) : "0.00");
+  };
+
+  const saveToHistory = () => {
+    const newEntry = { deltaT, area, layers, totalResistance, heatFlux, timestamp: new Date().toLocaleString() };
+    const updatedHistory = [newEntry, ...history.slice(0, 2)];
+    setHistory(updatedHistory);
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedHistory));
+  };
+
+  const addLayer = () => setLayers([...layers, { h: "", a: area, material: "" }]);
+  const removeLayer = (index) => layers.length > 1 && setLayers(layers.filter((_, i) => i !== index));
+
+  const isFormValid = () => deltaT && parseFloat(deltaT) > 0 && layers.every(layer => layer.h && layer.a && layer.material);
+
   return (
     <Box sx={{ maxWidth: 600, margin: "50px auto", padding: "30px", borderRadius: "16px", boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)", backgroundColor: theme.palette.background.paper, textAlign: "center" }}>
-      <Typography variant="h4" gutterBottom>
-        Transferência de Calor por Convecção
-      </Typography>
-
-      <TextField 
-        label="Diferença de Temperatura (ΔT em K)" 
-        type="text" 
-        value={deltaT} 
-        onChange={handleInputChange(setDeltaT)} 
-        fullWidth 
-        margin="normal" 
-      />
-
-   
+      <Typography variant="h4" gutterBottom>Transferência de Calor por Convecção</Typography>
+      <TextField label="Diferença de Temperatura (ΔT em K)" value={deltaT} onChange={(e) => handleNumericInput(e.target.value, setDeltaT)} fullWidth margin="normal" />
       <Typography variant="h6" gutterBottom>Camadas</Typography>
       {layers.map((layer, index) => (
         <Box key={index} sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
-       <TextField 
-  label="Área (m²)" 
-  type="text" 
-  value={layer.a} 
-  onChange={(e) => handleLayerAreaChange(index, e)} 
-  fullWidth 
-  margin="normal" 
-/>
-
-<MaterialSelector
-  materials={materials}
-  selectedMaterial={layer.material}
-  onChange={(value) => handleMaterialChange(index, value)}
-/>
-
-     <Typography variant="body1">
-            Coeficiente de convecção (h): <strong>{layer.h ? `${layer.h} W/m²K` : "Selecione um material"}</strong>
-          </Typography>
+         <TextField label="Área (m²)" value={layer.a}onChange={(e) => handleNumericInput(e.target.value, (val) => handleLayerChange(index, "a", val))} fullWidth margin="normal"/>
+          <MaterialSelector materials={materials} selectedMaterial={layer.material} onChange={(value) => handleMaterialChange(index, value)} />
           <IconButton onClick={() => removeLayer(index)} sx={{ color: "#9b00d9" }}>
             <RemoveCircleIcon />
           </IconButton>
         </Box>
       ))}
-
-      <Button 
-        variant="outlined" 
-        onClick={addLayer} 
-        startIcon={<AddCircleIcon />} 
-        sx={{ marginBottom: "10px", color: "#7300ff", borderColor: "#7300ff", "&:hover": { backgroundColor: "#7300ff", color: "white" } }}
-      >
-        Adicionar Camada
-      </Button>
-
-      <Button 
-  variant="contained" 
-  onClick={calculateResistance} 
-  disabled={!isFormValid()} 
-  sx={{ display: "block", margin: "10px auto", backgroundColor: isFormValid() ? "#007BFF" : "#ccc", "&:hover": { backgroundColor: isFormValid() ? "#0056b3" : "#ccc" } }}
->
-  Calcular
-</Button>
-
-
-
-
-      <Box sx={{ marginTop: "20px", padding: "15px", borderRadius: "8px", backgroundColor: theme.palette.background.paper}}>
-        <Typography variant="h6">Resultados</Typography>
-        <TextField label="Resistência Térmica Total (K/W)" value={totalResistance.toFixed(6)} fullWidth margin="normal" InputProps={{ readOnly: true }} />
-        <TextField label="Fluxo de Calor (Q) em Watts" value={heatFlux} fullWidth margin="normal" InputProps={{ readOnly: true }} />
-      </Box>
-      <History historyData={history}/>
-
+      <AddLayerButton onClick={addLayer} />
+      <CalculateButton onClick={calculateResistance} isFormValid={isFormValid()} />
+      <ResultBox totalResistance={totalResistance} heatFlux={heatFlux} />
+      <History historyData={history} />
     </Box>
   );
 };

@@ -1,24 +1,23 @@
 import React, { useState, useEffect } from "react";
-import {
-  Box,
-  TextField,
-  Button,
-  Typography,
-  IconButton,
-  useTheme,
-} from "@mui/material";
-import AddCircleIcon from "@mui/icons-material/AddCircle";
+import { Box, TextField, Typography, IconButton, useTheme } from "@mui/material";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import History from "./components/History";
+import ResultBox from "../resultBox";
+import CalculateButton from "../calculateButton";
+import AddLayerButton from "../addLayerButton";
 
 const CylindricalConvection = () => {
+  // Hooks
   const theme = useTheme();
+  
+  // Estados
   const [deltaT, setDeltaT] = useState("");
   const [layers, setLayers] = useState([{ length: "", rInternal: "", rExternal: "", h: "" }]);
   const [totalResistance, setTotalResistance] = useState(0);
   const [heatFlux, setHeatFlux] = useState("0.00");
   const [history, setHistory] = useState([]);
 
+  // Efeitos
   useEffect(() => {
     const storedHistory = JSON.parse(localStorage.getItem("ConvCilHistory")) || [];
     setHistory(storedHistory);
@@ -30,25 +29,11 @@ const CylindricalConvection = () => {
     }
   }, [totalResistance, heatFlux]);
 
-  const handleLayerChange = (index, field, value) => {
-    if (/^\d*\.?\d*$/.test(value)) {
-      setLayers(prevLayers =>
-        prevLayers.map((layer, i) =>
-          i === index ? { ...layer, [field]: value } : layer
-        )
-      );
-    }
-  };
-
+  // Função para salvar no histórico
   const saveToHistory = () => {
     const newEntry = {
       deltaT,
-      layers: layers.map(layer => ({
-        length: layer.length,
-        rInternal: layer.rInternal,
-        rExternal: layer.rExternal,
-        h: layer.h
-      })),
+      layers: layers.map(layer => ({ ...layer })),
       totalResistance: totalResistance.toFixed(6),
       heatFlux,
       timestamp: new Date().toLocaleString(),
@@ -61,15 +46,33 @@ const CylindricalConvection = () => {
     });
   };
 
+  // Manipulação de entrada dos campos
+  const handleLayerChange = (index, field, value) => {
+    if (/^\d*\.?\d*$/.test(value)) {
+      setLayers(prevLayers =>
+        prevLayers.map((layer, i) => (i === index ? { ...layer, [field]: value } : layer))
+      );
+    }
+  };
+
+  const handleDeltaTChange = (e) => {
+    const value = e.target.value;
+    if (/^\d*\.?\d*$/.test(value)) {
+      setDeltaT(value);
+    }
+  };
+
+  // Cálculo da resistência térmica e fluxo de calor
   const handleCalculate = () => {
     let totalRes = 0;
-    layers.forEach((layer) => {
+    layers.forEach(layer => {
       const L = parseFloat(layer.length);
       const rInternal = parseFloat(layer.rInternal);
       const rExternal = parseFloat(layer.rExternal);
       const hValue = parseFloat(layer.h);
 
-      if (!isNaN(L) && !isNaN(rInternal) && !isNaN(rExternal) && !isNaN(hValue) && L > 0 && rInternal > 0 && rExternal > rInternal && hValue > 0) {
+      if (!isNaN(L) && !isNaN(rInternal) && !isNaN(rExternal) && !isNaN(hValue) &&
+          L > 0 && rInternal > 0 && rExternal > rInternal && hValue > 0) {
         totalRes += Math.log(rExternal / rInternal) / (2 * Math.PI * L * hValue);
       }
     });
@@ -78,15 +81,26 @@ const CylindricalConvection = () => {
     setHeatFlux(totalRes > 0 ? (parseFloat(deltaT || 0) / totalRes).toFixed(2) : "0.00");
   };
 
-  const isCalculateDisabled = layers.some(layer => parseFloat(layer.rInternal) >= parseFloat(layer.rExternal));
+  // Validação do formulário
+  const isFormValid = () => {
+    if (!deltaT || isNaN(parseFloat(deltaT))) return false;
+    return layers.every(layer => 
+      layer.length && layer.rInternal && layer.rExternal && layer.h &&
+      !isNaN(parseFloat(layer.length)) &&
+      !isNaN(parseFloat(layer.rInternal)) &&
+      !isNaN(parseFloat(layer.rExternal)) &&
+      !isNaN(parseFloat(layer.h)) &&
+      parseFloat(layer.rExternal) > parseFloat(layer.rInternal)
+    );
+  };
 
   return (
     <Box sx={{ maxWidth: 500, margin: "50px auto", padding: "30px", borderRadius: "16px", boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)", backgroundColor: theme.palette.background.paper, textAlign: "center" }}>
       <Typography variant="h4" gutterBottom>
         Transferência de Calor por Convecção
       </Typography>
-
-      <TextField label="Diferença de Temperatura (ΔT em K)" value={deltaT} onChange={(e) => setDeltaT(e.target.value)} fullWidth margin="normal" />
+      
+      <TextField label="Diferença de Temperatura (ΔT em K)" value={deltaT} onChange={handleDeltaTChange} fullWidth margin="normal" />
 
       <Typography variant="h6" gutterBottom>
         Camadas
@@ -103,20 +117,9 @@ const CylindricalConvection = () => {
         </Box>
       ))}
 
-      <Button variant="outlined" onClick={() => setLayers([...layers, { length: "", rInternal: "", rExternal: "", h: "" }])} startIcon={<AddCircleIcon />} sx={{ marginBottom: "20px", color: "#7300ff", borderColor: "#7300ff", "&:hover": { backgroundColor: "#7300ff", color: "white" } }}>
-        Adicionar Camada
-      </Button>
-
-      <Button variant="contained" onClick={handleCalculate} disabled={isCalculateDisabled} sx={{ display: "block", margin: "10px auto", backgroundColor: isCalculateDisabled ? "#ccc" : "#007BFF", cursor: isCalculateDisabled ? "not-allowed" : "pointer" }}>
-        Calcular
-      </Button>
-
-      <Box sx={{ marginTop: "20px", padding: "15px", borderRadius: "8px", backgroundColor: theme.palette.background.paper }}>
-        <Typography variant="h6">Resultados</Typography>
-        <TextField label="Resistência Térmica Total (K/W)" value={totalResistance.toFixed(6)} fullWidth margin="normal" InputProps={{ readOnly: true }} />
-        <TextField label="Fluxo de Calor (Q) em Watts" value={heatFlux} fullWidth margin="normal" InputProps={{ readOnly: true }} />
-      </Box>
-
+      <AddLayerButton onClick={() => setLayers([...layers, { length: "", rInternal: "", rExternal: "", h: "" }])} />
+      <CalculateButton onClick={handleCalculate} isFormValid={isFormValid()} />
+      <ResultBox totalResistance={totalResistance} heatFlux={heatFlux} />
       <History historyData={history} />
     </Box>
   );

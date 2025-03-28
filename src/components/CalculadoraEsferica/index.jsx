@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Box, TextField, Button, Typography, IconButton, MenuItem, Select, FormControl, InputLabel, useTheme } from "@mui/material";
-import AddCircleIcon from "@mui/icons-material/AddCircle";
+import { Box, TextField, Typography, IconButton, useTheme } from "@mui/material";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import History from "./components/History";
 import MaterialSelector from "../materialSelector";
-
-
+import ResultBox from "../resultBox";
+import CalculateButton from "../calculateButton";
+import AddLayerButton from "../addLayerButton";
 
 const SphericalHeatTransfer = () => {
   const theme = useTheme();
@@ -13,25 +13,30 @@ const SphericalHeatTransfer = () => {
   const [deltaT, setDeltaT] = useState("");
   const [totalResistance, setTotalResistance] = useState(0);
   const [heatFlux, setHeatFlux] = useState("0.00");
-    const [history, setHistory] = useState([]);
-     const [materials, setMaterials] = useState([]);
+  const [history, setHistory] = useState([]);
+  const [materials, setMaterials] = useState([]);
 
-    useEffect(() => {
-      fetch("https://materialsapi.onrender.com/materials")  // Substitua pela URL da API hospedada
-        .then(response => response.json())
-        .then(data => {
-          const formattedMaterials = [{ name: "Selecione um material", value: "" }, 
-            ...data.map(metal => ({
-              name: metal.name,
-              value: metal.thermalConductivity,
-              symbol: metal.symbol
-            }))
-          ];
-          setMaterials(formattedMaterials);
-        })
-        .catch(error => console.error("Erro ao carregar materiais:", error));
-    }, []);
-    
+  useEffect(() => {
+    fetch("https://materialsapi.onrender.com/materials")
+      .then(response => response.json())
+      .then(data => {
+        const formattedMaterials = [
+          { name: "Selecione um material", value: "" },
+          ...data.map(metal => ({
+            name: metal.name,
+            value: metal.thermalConductivity,
+            symbol: metal.symbol
+          }))
+        ];
+        setMaterials(formattedMaterials);
+      })
+      .catch(error => console.error("Erro ao carregar materiais:", error));
+  }, []);
+
+  useEffect(() => {
+    const savedHistory = JSON.parse(localStorage.getItem("condEsfHistory")) || [];
+    setHistory(savedHistory);
+  }, []);
 
   const handleNumericInput = (value, setter) => {
     if (/^\d*\.?\d*$/.test(value)) {
@@ -46,36 +51,6 @@ const SphericalHeatTransfer = () => {
       setLayers(updatedLayers);
     }
   };
-  
-  useEffect(() => {
-    const savedHistory = JSON.parse(localStorage.getItem("condEsfHistory")) || [];
-    setHistory(savedHistory);
-  }, []);
-  
-  const saveToHistory = (newEntry) => {
-    const updatedHistory = [newEntry, ...history.slice(0, 4)]; // Mantém os 5 últimos cálculos
-    setHistory(updatedHistory);
-    localStorage.setItem("condEsfHistory", JSON.stringify(updatedHistory));
-  };
-  
-  
-  
-  const isFormValid = () => {
-    if (!deltaT || isNaN(parseFloat(deltaT)) || parseFloat(deltaT) <= 0) return false;
-    return layers.every(layer => {
-      const k = parseFloat(layer.k);
-      const r1 = parseFloat(layer.r1);
-      const r2 = parseFloat(layer.r2);
-  
-      return (
-        !isNaN(k) && k > 0 &&
-        !isNaN(r1) && r1 > 0 &&
-        !isNaN(r2) && r2 > r1
-      );
-    });
-  };
-  
-  
 
   const handleMaterialChange = (index, value) => {
     setLayers((prevLayers) =>
@@ -85,8 +60,6 @@ const SphericalHeatTransfer = () => {
               ...layer,
               material: value,
               k: materials.find((mat) => mat.name === value)?.value || "",
-              r1: "",
-              r2: ""
             }
           : layer
       )
@@ -99,127 +72,77 @@ const SphericalHeatTransfer = () => {
   };
 
   const removeLayer = (index) => {
-    const updatedLayers = layers.filter((_, i) => i !== index);
-    setLayers(updatedLayers);
+    setLayers(layers.filter((_, i) => i !== index));
   };
 
-  const calculateResistanceAndHeatFlux = () => {
-    let totalRes = 0;
-    layers.forEach((layer) => {
+  const isFormValid = () => {
+    if (!deltaT || isNaN(parseFloat(deltaT)) || parseFloat(deltaT) <= 0) return false;
+  
+    return layers.every(layer => {
       const k = parseFloat(layer.k);
       const r1 = parseFloat(layer.r1);
       const r2 = parseFloat(layer.r2);
   
-      if (!isNaN(k) && !isNaN(r1) && !isNaN(r2) && k > 0 && r1 > 0 && r2 > r1) {
-        totalRes += (1 / (4 * Math.PI * k)) * ((1 / r1) - (1 / r2));
-      }
+      return (
+        !isNaN(k) && k > 0 &&
+        !isNaN(r1) && r1 > 0 &&
+        !isNaN(r2) && r2 > r1 &&
+        layer.material !== "" // Verifica se um material foi selecionado
+      );
     });
-  
-    setTotalResistance(totalRes);
-  
-    if (totalRes > 0) {
-      const heatFluxValue = (parseFloat(deltaT || 0) / totalRes).toFixed(2);
-      setHeatFlux(heatFluxValue);
-    
-      saveToHistory({
-        deltaT,
-        layers: layers.map(layer => ({
-          material: layer.material,
-          r1: layer.r1,
-          r2: layer.r2
-        })),
-        totalResistance: !isNaN(totalRes) ? Number(totalRes) : "N/A",
-        heatFlux: heatFluxValue, // Usar heatFluxValue em vez de heatFlux
-        timestamp: new Date().toLocaleString()
-      });
-    
-    } else {
-      setHeatFlux("0.00");
-    }
-    
   };
   
-  
-  
+
+  const calculateResistanceAndHeatFlux = () => {
+    let totalRes = layers.reduce((acc, layer) => {
+      const k = parseFloat(layer.k);
+      const r1 = parseFloat(layer.r1);
+      const r2 = parseFloat(layer.r2);
+      if (!isNaN(k) && !isNaN(r1) && !isNaN(r2) && k > 0 && r1 > 0 && r2 > r1) {
+        return acc + (1 / (4 * Math.PI * k)) * ((1 / r1) - (1 / r2));
+      }
+      return acc;
+    }, 0);
+
+    setTotalResistance(totalRes);
+    const heatFluxValue = totalRes > 0 ? (parseFloat(deltaT || 0) / totalRes).toFixed(2) : "0.00";
+    setHeatFlux(heatFluxValue);
+
+    saveToHistory({
+      deltaT,
+      layers: layers.map(layer => ({ material: layer.material, r1: layer.r1, r2: layer.r2 })),
+      totalResistance: !isNaN(totalRes) ? Number(totalRes) : "N/A",
+      heatFlux: heatFluxValue,
+      timestamp: new Date().toLocaleString()
+    });
+  };
+
+  const saveToHistory = (newEntry) => {
+    const updatedHistory = [newEntry, ...history.slice(0, 4)];
+    setHistory(updatedHistory);
+    localStorage.setItem("condEsfHistory", JSON.stringify(updatedHistory));
+  };
 
   return (
-    <Box sx={{ maxWidth: 600, margin: "50px auto", padding: "30px", borderRadius: "16px", boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",  backgroundColor: theme.palette.background.paper, textAlign: "center" }}>
+    <Box sx={{ maxWidth: 600, margin: "50px auto", padding: "30px", borderRadius: "16px", boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)", backgroundColor: theme.palette.background.paper, textAlign: "center" }}>
       <Typography variant="h4" gutterBottom>
         Transferência de Calor em Estruturas Esféricas
       </Typography>
-
-      <TextField
-        label="Diferença de Temperatura (ΔT em K)"
-        value={deltaT}
-        onChange={(e) => handleNumericInput(e.target.value, setDeltaT)}
-        fullWidth
-        margin="normal"
-      />
-
-      <Typography variant="h6" gutterBottom>
-        Camadas
-      </Typography>
+      <TextField label="Diferença de Temperatura (ΔT em K)" value={deltaT} onChange={(e) => handleNumericInput(e.target.value, setDeltaT)} fullWidth margin="normal" />
+      <Typography variant="h6" gutterBottom>Camadas</Typography>
       {layers.map((layer, index) => (
-         <Box key={index} sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
-                  <TextField
-  label="Raio Interno (m)"
-  
-  value={layer.r1}
-  onChange={(e) => handleLayerChange(index, "r1", e.target.value)}
-  fullWidth
-  inputProps={{ min: 0, step: "any" }}
-  error={layer.r1 !== "" && (isNaN(layer.r1) || parseFloat(layer.r1) <= 0)}
-  helperText={layer.r1 !== "" && parseFloat(layer.r1) <= 0 ? "Valor deve ser maior que zero" : ""}
-/>
-   <TextField
-          
-            label="Raio Externo (m)"
-            value={layer.r2}
-            onChange={(e) => handleLayerChange(index, "r2", e.target.value)}
-            fullWidth
-          />
-            <MaterialSelector
-  materials={materials}
-  selectedMaterial={layer.material}
-  onChange={(value) => handleMaterialChange(index, value)}
-/>
-
-                  <Typography variant="body1">
-                    Condutividade térmica (k): <strong>{layer.k ? `${layer.k} W/m.K` : "Selecione um material"}</strong>
-                  </Typography>
-          <IconButton onClick={() => removeLayer(index)} sx={{ color: "#9b00d9" }}>
-            <RemoveCircleIcon />
-          </IconButton>
+        <Box key={index} sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
+          <TextField label="Raio Interno (m)" value={layer.r1} onChange={(e) => handleLayerChange(index, "r1", e.target.value)} fullWidth />
+          <TextField label="Raio Externo (m)" value={layer.r2} onChange={(e) => handleLayerChange(index, "r2", e.target.value)} fullWidth />
+          <MaterialSelector materials={materials} selectedMaterial={layer.material} onChange={(value) => handleMaterialChange(index, value)} />
+          <Typography variant="body1">Condutividade térmica (k): <strong>{layer.k ? `${layer.k} W/m.K` : "Selecione um material"}</strong></Typography>
+          <IconButton onClick={() => removeLayer(index)} sx={{ color: "#9b00d9" }}><RemoveCircleIcon /></IconButton>
         </Box>
       ))}
-
-      <Button variant="outlined" onClick={addLayer} startIcon={<AddCircleIcon />} sx={{ marginBottom: "20px", color: "#7300ff", borderColor: "#7300ff", "&:hover": { backgroundColor: "#7300ff", color: "white" } }}>
-        Adicionar Camada
-      </Button>
-
-      <Button
-             variant="contained"
-             onClick={() => {
-              calculateResistanceAndHeatFlux(); 
-             }}
-             disabled={!isFormValid()}
-             sx={{
-               display: "block",
-               margin: "10px auto",
-               backgroundColor: isFormValid() ? "#007BFF" : "#b0c4de",
-               "&:hover": { backgroundColor: isFormValid() ? "#0056b3" : "#b0c4de" },
-             }}
-           >
-             Calcular
-           </Button>
-
-      <Box sx={{ marginTop: "20px", padding: "15px", borderRadius: "8px",  backgroundColor: theme.palette.background.paper}}>
-        <Typography variant="h6">Resultados</Typography>
-        <TextField label="Resistência Térmica Total (K/W)" value={totalResistance.toFixed(6)} fullWidth margin="normal" InputProps={{ readOnly: true }} />
-        <TextField label="Fluxo de Calor (Q) em Watts" value={heatFlux} fullWidth margin="normal" InputProps={{ readOnly: true }} />
-      </Box>
-<History historyData={history}/>
-
+      <AddLayerButton onClick={addLayer} />
+      <CalculateButton onClick={calculateResistanceAndHeatFlux} isFormValid={isFormValid()} />
+      <ResultBox totalResistance={totalResistance} heatFlux={heatFlux} />
+      <History historyData={history} />
     </Box>
   );
 };

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { 
-  Box, TextField, Button, Typography, IconButton, useTheme 
-} from "@mui/material";
-import AddCircleIcon from "@mui/icons-material/AddCircle";
+import { Box, TextField, Typography, IconButton, useTheme } from "@mui/material";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import History from "./Components/History";
+import ResultBox from "../resultBox";
+import CalculateButton from "../calculateButton";
+import AddLayerButton from "../addLayerButton";
 
 const SphericalConvectionCalculator = () => {
   const theme = useTheme();
@@ -26,17 +26,15 @@ const SphericalConvectionCalculator = () => {
   }, [totalResistance, heatFlux]);
 
   const handleNumericInput = (value, setter) => {
-    if (/^\d*\.?\d*$/.test(value)) {
+    if (/^\d*\.?\d*$/.test(value) && value !== "") {
       setter(value);
     }
   };
 
   const handleLayerChange = (index, field, value) => {
-    if (/^\d*\.?\d*$/.test(value)) {
+    if (/^\d*\.?\d*$/.test(value) && value !== "") {
       setLayers(prevLayers =>
-        prevLayers.map((layer, i) =>
-          i === index ? { ...layer, [field]: value } : layer
-        )
+        prevLayers.map((layer, i) => (i === index ? { ...layer, [field]: value } : layer))
       );
     }
   };
@@ -57,12 +55,19 @@ const SphericalConvectionCalculator = () => {
     setHeatFlux(totalRes > 0 ? (parseFloat(deltaT || 0) / totalRes).toFixed(2) : "0.00");
   };
 
-  const isCalculateDisabled = !deltaT || parseFloat(deltaT) <= 0 || layers.some(layer => 
-    !layer.h || !layer.r1 || !layer.r2 ||
-    parseFloat(layer.h) <= 0 ||
-    parseFloat(layer.r1) <= 0 ||
-    parseFloat(layer.r2) <= parseFloat(layer.r1)
-  );
+  const addLayer = () => {
+    setLayers([...layers, { h: "", r1: "", r2: "" }]);
+  };
+
+  const isFormValid = () => {
+    if (deltaT === "" || isNaN(parseFloat(deltaT)) || parseFloat(deltaT) <= 0) return false;
+    
+    return layers.every(layer =>
+      layer.h !== "" && !isNaN(parseFloat(layer.h)) && parseFloat(layer.h) > 0 &&
+      layer.r1 !== "" && !isNaN(parseFloat(layer.r1)) && parseFloat(layer.r1) > 0 &&
+      layer.r2 !== "" && !isNaN(parseFloat(layer.r2)) && parseFloat(layer.r2) > parseFloat(layer.r1)
+    );
+  };
 
   const saveToHistory = () => {
     const newEntry = {
@@ -86,14 +91,8 @@ const SphericalConvectionCalculator = () => {
         Transferência de Calor por Convecção em Estruturas Esféricas
       </Typography>
       
-      <TextField
-        label="Diferença de Temperatura (ΔT em K)"
-        value={deltaT}
-        onChange={(e) => handleNumericInput(e.target.value, setDeltaT)}
-        fullWidth
-        margin="normal"
-      />
-
+      <TextField label="Diferença de Temperatura (ΔT em K)" value={deltaT} onChange={(e) => handleNumericInput(e.target.value, setDeltaT)} fullWidth margin="normal" />
+      
       <Typography variant="h6" gutterBottom>
         Camadas de Convecção
       </Typography>
@@ -107,26 +106,10 @@ const SphericalConvectionCalculator = () => {
           </IconButton>
         </Box>
       ))}
-
-      <Button variant="outlined" onClick={() => setLayers([...layers, { h: "", r1: "", r2: "" }])} startIcon={<AddCircleIcon />} sx={{ marginBottom: "20px", color: "#7300ff", borderColor: "#7300ff", "&:hover": { backgroundColor: "#7300ff", color: "white" } }}>
-        Adicionar Camada
-      </Button>
-
-      <Button
-        variant="contained"
-        onClick={calculateResistanceAndHeatFlux}
-        disabled={isCalculateDisabled}
-        sx={{ display: "block", margin: "10px auto", backgroundColor: isCalculateDisabled ? "#ccc" : "#007BFF", cursor: isCalculateDisabled ? "not-allowed" : "pointer" }}
-      >
-        Calcular
-      </Button>
-
-      <Box sx={{ marginTop: "20px", padding: "15px", borderRadius: "8px", backgroundColor: theme.palette.background.paper }}>
-        <Typography variant="h6">Resultados</Typography>
-        <TextField label="Resistência Térmica Total (K/W)" value={totalResistance.toFixed(6)} fullWidth margin="normal" InputProps={{ readOnly: true }} />
-        <TextField label="Fluxo de Calor (Q) em Watts" value={heatFlux} fullWidth margin="normal" InputProps={{ readOnly: true }} />
-      </Box>
-
+      
+      <AddLayerButton onClick={addLayer} />
+      <CalculateButton onClick={calculateResistanceAndHeatFlux} isFormValid={isFormValid()} />
+      <ResultBox totalResistance={totalResistance} heatFlux={heatFlux} />
       <History historyData={history} />
     </Box>
   );
