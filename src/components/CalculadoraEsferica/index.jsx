@@ -6,7 +6,7 @@ import MaterialSelector from "../materialSelector";
 import ResultBox from "../resultBox";
 import CalculateButton from "../calculateButton";
 import AddLayerButton from "../addLayerButton";
-
+import BubbleChart from "./components/Graphic";
 const SphericalHeatTransfer = () => {
   const theme = useTheme();
   const [layers, setLayers] = useState([{ k: "", r1: "", r2: "", material: "" }]);
@@ -16,22 +16,27 @@ const SphericalHeatTransfer = () => {
   const [history, setHistory] = useState([]);
   const [materials, setMaterials] = useState([]);
 
-  useEffect(() => {
-    fetch("https://materialsapi.onrender.com/materials")
-      .then(response => response.json())
-      .then(data => {
-        const formattedMaterials = [
-          { name: "Selecione um material", value: "" },
-          ...data.map(metal => ({
-            name: metal.name,
-            value: metal.thermalConductivity,
-            symbol: metal.symbol
-          }))
-        ];
-        setMaterials(formattedMaterials);
-      })
-      .catch(error => console.error("Erro ao carregar materiais:", error));
-  }, []);
+  const LOCAL_STORAGE_KEY = "condEsfHistory";
+
+   useEffect(() => {
+      
+        fetch("https://materialsapi.onrender.com/materials")
+          .then(response => response.json())
+          .then(data => setMaterials(data))
+          .catch(error => console.error("Erro ao carregar materiais:", error));
+      }, []);
+      useEffect(() => {
+        const rawData = localStorage.getItem(LOCAL_STORAGE_KEY);
+        console.log("Dados brutos no localStorage:", rawData);
+        try {
+          const savedHistory = JSON.parse(rawData) || [];
+          console.log("Histórico carregado:", savedHistory);
+          setHistory(savedHistory);
+        } catch (error) {
+          console.error("Erro ao fazer parse do localStorage:", error);
+          setHistory([]); // Define um valor padrão para evitar erros
+        }
+      }, []);
 
   useEffect(() => {
     const savedHistory = JSON.parse(localStorage.getItem("condEsfHistory")) || [];
@@ -53,18 +58,42 @@ const SphericalHeatTransfer = () => {
   };
 
   const handleMaterialChange = (index, value) => {
-    setLayers((prevLayers) =>
-      prevLayers.map((layer, i) =>
-        i === index
-          ? {
-              ...layer,
-              material: value,
-              k: materials.find((mat) => mat.name === value)?.value || "",
-            }
-          : layer
-      )
-    );
-  };
+  const selectedMaterial = materials.find((mat) => mat.name === value);
+
+  if (!selectedMaterial) return;
+
+  setLayers((prevLayers) =>
+    prevLayers.map((layer, i) =>
+      i === index
+        ? {
+            ...layer,
+            material: value,
+            k: selectedMaterial.thermalConductivityDry, // Valor padrão
+            state: "seco", // Define um estado padrão
+          }
+        : layer
+    )
+  );
+};
+
+const handleStateChange = (index, state) => {
+  setLayers((prevLayers) =>
+    prevLayers.map((layer, i) =>
+      i === index
+        ? {
+            ...layer,
+            state,
+            k:
+              state === "seco"
+                ? materials.find((mat) => mat.name === layer.material)?.thermalConductivityDry || ""
+                : materials.find((mat) => mat.name === layer.material)?.thermalConductivityWet || "",
+          }
+        : layer
+    )
+  );
+};
+
+  
   
 
   const addLayer = () => {
@@ -87,10 +116,15 @@ const SphericalHeatTransfer = () => {
         !isNaN(k) && k > 0 &&
         !isNaN(r1) && r1 > 0 &&
         !isNaN(r2) && r2 > r1 &&
-        layer.material !== "" // Verifica se um material foi selecionado
+        layer.material.trim() !== "" // Verifica se um material foi selecionado corretamente
       );
     });
   };
+  
+  useEffect(() => {
+    console.log("Materiais carregados:", materials);
+  }, [materials]);
+  
   
 
   const calculateResistanceAndHeatFlux = () => {
@@ -134,13 +168,16 @@ const SphericalHeatTransfer = () => {
         <Box key={index} sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
           <TextField label="Raio Interno (m)" value={layer.r1} onChange={(e) => handleLayerChange(index, "r1", e.target.value)} fullWidth />
           <TextField label="Raio Externo (m)" value={layer.r2} onChange={(e) => handleLayerChange(index, "r2", e.target.value)} fullWidth />
-          <MaterialSelector materials={materials} selectedMaterial={layer.material} onChange={(value) => handleMaterialChange(index, value)} />
-          <Typography variant="body1">Condutividade térmica (k): <strong>{layer.k ? `${layer.k} W/m.K` : "Selecione um material"}</strong></Typography>
+          <MaterialSelector materials={materials} selectedMaterial={layer.material} selectedState={layer.state} onMaterialChange={(value) => handleMaterialChange(index, value)} onStateChange={(value) => handleStateChange(index, value)}/>
+ <Typography variant="body1">Condutividade térmica (k): <strong>{layer.k ? `${layer.k} W/m.K` : "Selecione um material"}</strong></Typography>
           <IconButton onClick={() => removeLayer(index)} sx={{ color: "#9b00d9" }}><RemoveCircleIcon /></IconButton>
         </Box>
       ))}
       <AddLayerButton onClick={addLayer} />
       <CalculateButton onClick={calculateResistanceAndHeatFlux} isFormValid={isFormValid()} />
+        {layers.length > 0 && layers.some(layer => layer.k && layer.r2) && (
+        <BubbleChart selectedMaterials={layers} />
+      )}
       <ResultBox totalResistance={totalResistance} heatFlux={heatFlux} />
       <History historyData={history} />
     </Box>

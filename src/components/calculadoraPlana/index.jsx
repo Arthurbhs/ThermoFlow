@@ -6,12 +6,13 @@ import MaterialSelector from "../materialSelector";
 import ResultBox from "../resultBox";
 import CalculateButton from "../calculateButton";
 import AddLayerButton from "../addLayerButton";
+import ThermalConductivityChart from "./components/Graphic";
 
 const LOCAL_STORAGE_KEY = "condPlanHistory";
 
 const HeatTransferCalculator = () => {
   const theme = useTheme();
-  const [layers, setLayers] = useState([{ h: "", a: 1, material: "" }]);
+  const [layers, setLayers] = useState([{ h: "", a: 1, material: "", state: "seco" }]);
   const [deltaT, setDeltaT] = useState("");
   const [area, setArea] = useState(1);
   const [totalResistance, setTotalResistance] = useState(0);
@@ -22,21 +23,22 @@ const HeatTransferCalculator = () => {
   useEffect(() => {
     fetch("https://materialsapi.onrender.com/materials")
       .then(response => response.json())
-      .then(data => {
-        const formattedMaterials = [
-          { name: "Selecione um material", value: "" },
-          ...data.map(metal => ({ name: metal.name, value: metal.thermalConductivity }))
-        ];
-        setMaterials(formattedMaterials);
-      })
+      .then(data => setMaterials(data))
       .catch(error => console.error("Erro ao carregar materiais:", error));
   }, []);
-
   useEffect(() => {
-    const savedHistory = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) || [];
-    setHistory(savedHistory);
+    const rawData = localStorage.getItem(LOCAL_STORAGE_KEY);
+    console.log("Dados brutos no localStorage:", rawData);
+    try {
+      const savedHistory = JSON.parse(rawData) || [];
+      console.log("Histórico carregado:", savedHistory);
+      setHistory(savedHistory);
+    } catch (error) {
+      console.error("Erro ao fazer parse do localStorage:", error);
+      setHistory([]); // Define um valor padrão para evitar erros
+    }
   }, []);
-
+  
   useEffect(() => {
     if (totalResistance > 0) {
       calculateHeatFlux();
@@ -53,25 +55,47 @@ const HeatTransferCalculator = () => {
     const sanitizedValue = value.replace(/[^0-9.]/g, "").replace(/^([0-9]*\.?[0-9]*).*$/, "$1");
     setter(sanitizedValue);
   };
-  
 
-  const handleLayerChange = (index, field, value) => {
-    setLayers(prev => prev.map((layer, i) => (i === index ? { ...layer, [field]: value } : layer)));
-  };
-
-  const handleMaterialChange = (index, value) => {
-    const selectedMaterial = materials.find(mat => mat.name === value);
-    if (!selectedMaterial) return;
-    
-    setLayers(prev => prev.map((layer, i) => (
-      i === index ? { ...layer, h: selectedMaterial.value, material: value } : layer
-    )));
+  const handleLayerChange = (index, key, value) => {
+    setLayers(prev => prev.map((layer, i) => i === index ? { ...layer, [key]: value } : layer));
   };
 
   const calculateResistance = () => {
-    let total = layers.reduce((acc, { h, a }) => acc + (1 / (parseFloat(h) * parseFloat(a) || 1)), 0);
+    // Criar lista de materiais selecionados para o gráfico
+    const selectedMaterials = layers
+      .map(layer => {
+        const selectedMaterial = materials.find(m => m.name === layer.material);
+        if (!selectedMaterial) return null;
+  
+        return {
+          name: layer.material,
+          area: layer.a,
+          thermalConductivity:
+            layer.state === "seco"
+              ? selectedMaterial.thermalConductivityDry
+              : selectedMaterial.thermalConductivityWet
+        };
+      })
+      .filter(material => material !== null); // Remove materiais inválidos
+  
+    console.log("Materiais selecionados para o gráfico:", selectedMaterials);
+  
+    // Calcular resistência térmica total
+    let total = layers.reduce((acc, { h, a, material, state }) => {
+      const selectedMaterial = materials.find(m => m.name === material);
+      if (!selectedMaterial) return acc;
+  
+      const conductivity =
+        state === "seco"
+          ? selectedMaterial.thermalConductivityDry
+          : selectedMaterial.thermalConductivityWet;
+  
+      return acc + (h / (conductivity * a));
+    }, 0);
+  
     setTotalResistance(total);
   };
+  
 
   const calculateHeatFlux = () => {
     const deltaTValue = parseFloat(deltaT);
@@ -85,20 +109,27 @@ const HeatTransferCalculator = () => {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedHistory));
   };
 
-  const addLayer = () => setLayers([...layers, { h: "", a: area, material: "" }]);
+  const addLayer = () => setLayers([...layers, { h: "", a: area, material: "", state: "seco" }]);
   const removeLayer = (index) => layers.length > 1 && setLayers(layers.filter((_, i) => i !== index));
 
   const isFormValid = () => deltaT && parseFloat(deltaT) > 0 && layers.every(layer => layer.h && layer.a && layer.material);
-
+  console.log("Layers:", layers);
   return (
     <Box sx={{ maxWidth: 600, margin: "50px auto", padding: "30px", borderRadius: "16px", boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)", backgroundColor: theme.palette.background.paper, textAlign: "center" }}>
-      <Typography variant="h4" gutterBottom>Transferência de Calor por Convecção</Typography>
+      <Typography variant="h4" gutterBottom>Transferência de Calor em Estruturas Planas</Typography>
       <TextField label="Diferença de Temperatura (ΔT em K)" value={deltaT} onChange={(e) => handleNumericInput(e.target.value, setDeltaT)} fullWidth margin="normal" />
       <Typography variant="h6" gutterBottom>Camadas</Typography>
       {layers.map((layer, index) => (
         <Box key={index} sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
-         <TextField label="Área (m²)" value={layer.a}onChange={(e) => handleNumericInput(e.target.value, (val) => handleLayerChange(index, "a", val))} fullWidth margin="normal"/>
-          <MaterialSelector materials={materials} selectedMaterial={layer.material} onChange={(value) => handleMaterialChange(index, value)} />
+         <MaterialSelector
+  materials={materials}
+  selectedMaterial={layer.material} // Certifique-se de passar a string correta
+  selectedState={layer.state}
+  onMaterialChange={(value) => handleLayerChange(index, "material", value)}
+  onStateChange={(value) => handleLayerChange(index, "state", value)}
+/>
+<TextField label="Espessura (m)" value={layer.h} onChange={(e) => handleNumericInput(e.target.value, (val) => handleLayerChange(index, "h", val))} fullWidth margin="normal" />
+          <TextField label="Área (m²)" value={layer.a} onChange={(e) => handleNumericInput(e.target.value, (val) => handleLayerChange(index, "a", val))} fullWidth margin="normal" />
           <IconButton onClick={() => removeLayer(index)} sx={{ color: "#9b00d9" }}>
             <RemoveCircleIcon />
           </IconButton>
@@ -107,7 +138,22 @@ const HeatTransferCalculator = () => {
       <AddLayerButton onClick={addLayer} />
       <CalculateButton onClick={calculateResistance} isFormValid={isFormValid()} />
       <ResultBox totalResistance={totalResistance} heatFlux={heatFlux} />
-      <History historyData={history} />
+      <ThermalConductivityChart
+  selectedMaterials={layers.map(layer => {
+    const selectedMaterial = materials.find(m => m.name === layer.material);
+    if (!selectedMaterial) return null;
+
+    return {
+      name: layer.material,
+      area: layer.a, // Certificando que estamos pegando corretamente
+      thermalConductivity:
+        layer.state === "seco"
+          ? selectedMaterial.thermalConductivityDry
+          : selectedMaterial.thermalConductivityWet
+    };
+  }).filter(material => material !== null)} 
+/>
+ <History historyData={history} />
     </Box>
   );
 };

@@ -88,7 +88,7 @@ const SphericalConvectionCalculator = () => {
   return (
     <Box sx={{ maxWidth: 600, margin: "50px auto", padding: "30px", borderRadius: "16px", boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)", backgroundColor: theme.palette.background.paper, textAlign: "center" }}>
       <Typography variant="h4" gutterBottom>
-        Transferência de Calor por Convecção em Estruturas Esféricas
+        Transferência de Calor em Estruturas Esféricas
       </Typography>
       
       <TextField label="Diferença de Temperatura (ΔT em K)" value={deltaT} onChange={(e) => handleNumericInput(e.target.value, setDeltaT)} fullWidth margin="normal" />
