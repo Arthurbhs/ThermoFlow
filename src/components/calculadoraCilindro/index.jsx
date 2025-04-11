@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Box, TextField, Typography, IconButton, useTheme } from "@mui/material";
+import { Box,Typography, IconButton, useTheme } from "@mui/material";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import History from "./componentes/History";
 import MaterialSelector from "../materialSelector";
@@ -7,6 +7,10 @@ import ResultBox from "../resultBox";
 import CalculateButton from "../calculateButton";
 import AddLayerButton from "../addLayerButton";
 import ThermalConductivityChart from "./componentes/Graphic";
+import TemperatureInput from "../Inputs/Temperature";
+import CylinderLengthInput from "../Inputs/CylinderLengthInput";
+import InternalRayInput from "../Inputs/InternalRayInput";
+import ExternalRayInput from "../Inputs/ExternalRayInput";
 
 const CylindricalConduction = () => {
   const theme = useTheme();
@@ -177,21 +181,21 @@ const CylindricalConduction = () => {
         Transferência de Calor em Estruturas cilindricas
       </Typography>
 
-      <TextField
-        label="Diferença de Temperatura (ΔT em K)"value={deltaT} fullWidth margin="normal"
-         onChange={(e) => {
+      <TemperatureInput value={deltaT} onChange={(e) => {
           const value = e.target.value;
           if (/^-?\d*\.?\d*$/.test(value)) {
             setDeltaT(value);
           }
-        }}
-      />
+        }}/>
+   
+
+     
 
       {layers.map((layer, index) => (
         <Box key={index} sx={{ marginBottom: "15px", textAlign: "center" }}>
-          <TextField label="Comprimento do Cilindro (m)" value={layer.length} onChange={(e) => handleLayerChange(index, "length", e.target.value)} fullWidth margin="normal" />
-          <TextField label="Raio Interno (m)" value={layer.radius1} onChange={(e) => handleLayerChange(index, "radius1", e.target.value)} fullWidth margin="normal" />
-          <TextField label="Raio Externo (m)" value={layer.radius2} onChange={(e) => handleLayerChange(index, "radius2", e.target.value)} fullWidth margin="normal" />
+          <CylinderLengthInput value={layer.length} onChange={(e) => handleLayerChange(index, "length", e.target.value)}/>
+            <InternalRayInput value={layer.radius1} onChange={(e) => handleLayerChange(index, "radius1", e.target.value)} />
+            <ExternalRayInput value={layer.radius2} onChange={(e) => handleLayerChange(index, "radius2", e.target.value)} />
           <MaterialSelector materials={materials} selectedMaterial={layer.material}selectedState={layer.state}onMaterialChange={(value) => handleMaterialChange(index, value)}onStateChange={(value) => handleStateChange(index, value)}/>
  <IconButton onClick={() => removeLayer(index)}><RemoveCircleIcon /></IconButton>
         </Box>

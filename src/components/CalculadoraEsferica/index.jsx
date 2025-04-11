@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Box, TextField, Typography, IconButton, useTheme } from "@mui/material";
+import { Box, Typography, IconButton, useTheme } from "@mui/material";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import History from "./components/History";
 import MaterialSelector from "../materialSelector";
@@ -7,6 +7,9 @@ import ResultBox from "../resultBox";
 import CalculateButton from "../calculateButton";
 import AddLayerButton from "../addLayerButton";
 import BubbleChart from "./components/Graphic";
+import TemperatureInput from "../Inputs/Temperature";
+import InternalRayInput from "../Inputs/InternalRayInput";
+import ExternalRayInput from "../Inputs/ExternalRayInput";
 const SphericalHeatTransfer = () => {
   const theme = useTheme();
   const [layers, setLayers] = useState([{ k: "", r1: "", r2: "", material: "" }]);
@@ -162,12 +165,12 @@ const handleStateChange = (index, state) => {
       <Typography variant="h4" gutterBottom>
         Transferência de Calor em Estruturas Esféricas
       </Typography>
-      <TextField label="Diferença de Temperatura (ΔT em K)" value={deltaT} onChange={(e) => handleNumericInput(e.target.value, setDeltaT)} fullWidth margin="normal" />
+       <TemperatureInput value={deltaT} onChange={(e) => handleNumericInput(e.target.value, setDeltaT)} />
       <Typography variant="h6" gutterBottom>Camadas</Typography>
       {layers.map((layer, index) => (
         <Box key={index} sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
-          <TextField label="Raio Interno (m)" value={layer.r1} onChange={(e) => handleLayerChange(index, "r1", e.target.value)} fullWidth />
-          <TextField label="Raio Externo (m)" value={layer.r2} onChange={(e) => handleLayerChange(index, "r2", e.target.value)} fullWidth />
+          <InternalRayInput value={layer.r1} onChange={(e) => handleLayerChange(index, "r1", e.target.value)}/>
+          <ExternalRayInput value={layer.r2} onChange={(e) => handleLayerChange(index, "r2", e.target.value)}/>
           <MaterialSelector materials={materials} selectedMaterial={layer.material} selectedState={layer.state} onMaterialChange={(value) => handleMaterialChange(index, value)} onStateChange={(value) => handleStateChange(index, value)}/>
  <Typography variant="body1">Condutividade térmica (k): <strong>{layer.k ? `${layer.k} W/m.K` : "Selecione um material"}</strong></Typography>
           <IconButton onClick={() => removeLayer(index)} sx={{ color: "#9b00d9" }}><RemoveCircleIcon /></IconButton>

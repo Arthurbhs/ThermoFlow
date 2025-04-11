@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Box, TextField, Typography, IconButton, useTheme } from "@mui/material";
+import { Box,Typography, IconButton, useTheme } from "@mui/material";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import History from "./components/History";
 import MaterialSelector from "../materialSelector";
@@ -7,6 +7,9 @@ import ResultBox from "../resultBox";
 import CalculateButton from "../calculateButton";
 import AddLayerButton from "../addLayerButton";
 import ThermalConductivityChart from "./components/Graphic";
+import TemperatureInput from "../Inputs/Temperature";
+import AreaInput from "../Inputs/AreaInput";
+import ThicknessInput from "../Inputs/thicknessInput";
 
 const LOCAL_STORAGE_KEY = "condPlanHistory";
 
@@ -117,7 +120,7 @@ const HeatTransferCalculator = () => {
   return (
     <Box sx={{ maxWidth: 600, margin: "50px auto", padding: "30px", borderRadius: "16px", boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)", backgroundColor: theme.palette.background.paper, textAlign: "center" }}>
       <Typography variant="h4" gutterBottom>Transferência de Calor em Estruturas Planas</Typography>
-      <TextField label="Diferença de Temperatura (ΔT em K)" value={deltaT} onChange={(e) => handleNumericInput(e.target.value, setDeltaT)} fullWidth margin="normal" />
+      <TemperatureInput value={deltaT} onChange={(e) => handleNumericInput(e.target.value, setDeltaT)} />
       <Typography variant="h6" gutterBottom>Camadas</Typography>
       {layers.map((layer, index) => (
         <Box key={index} sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
@@ -128,8 +131,8 @@ const HeatTransferCalculator = () => {
   onMaterialChange={(value) => handleLayerChange(index, "material", value)}
   onStateChange={(value) => handleLayerChange(index, "state", value)}
 />
-<TextField label="Espessura (m)" value={layer.h} onChange={(e) => handleNumericInput(e.target.value, (val) => handleLayerChange(index, "h", val))} fullWidth margin="normal" />
-          <TextField label="Área (m²)" value={layer.a} onChange={(e) => handleNumericInput(e.target.value, (val) => handleLayerChange(index, "a", val))} fullWidth margin="normal" />
+          <ThicknessInput value={layer.h} onChange={(e) => handleNumericInput(e.target.value, (val) => handleLayerChange(index, "h", val))}/>
+          <AreaInput value={layer.a} onChange={(e) => handleNumericInput(e.target.value, (val) => handleLayerChange(index, "a", val))} />
           <IconButton onClick={() => removeLayer(index)} sx={{ color: "#9b00d9" }}>
             <RemoveCircleIcon />
           </IconButton>

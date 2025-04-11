@@ -1,38 +1,41 @@
 import React, { useState, useEffect } from "react";
-import { Box, TextField, Typography, IconButton, useTheme } from "@mui/material";
+import { Box, Typography, IconButton, useTheme } from "@mui/material";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import History from "./components/History";
 import ResultBox from "../resultBox";
 import CalculateButton from "../calculateButton";
 import AddLayerButton from "../addLayerButton";
 import MaterialSelector from "../materialSelector";
+import TemperatureInput from "../Inputs/Temperature";
+import HInternalInput from "../Inputs/InternalConvectionCoefficient";
+import HExternalInput from "../Inputs/ExternalConvectionCoefficient";
+import ExternalRayInput from "../Inputs/ExternalRayInput";
+import InternalRayInput from "../Inputs/InternalRayInput";
+import CylinderLengthInput from "../Inputs/CylinderLengthInput";
 
 const CylindricalConvection = () => {
   const theme = useTheme();
-
-  // Estados
   const [deltaT, setDeltaT] = useState("");
-  const [materials, setMaterials] = useState([]); // Lista de materiais da API
-  const [layers, setLayers] = useState([{ length: "", rInternal: "", rExternal: "", h: "", material: "", state: "seco" }]);
+  const [hInternal, setHInternal] = useState("");
+  const [hExternal, setHExternal] = useState("");
+  const [materials, setMaterials] = useState([]);
+  const [layers, setLayers] = useState([{ length: "", rInternal: "", rExternal: "", material: "", state: "seco" }]);
   const [totalResistance, setTotalResistance] = useState(0);
   const [heatFlux, setHeatFlux] = useState("0.00");
   const [history, setHistory] = useState([]);
 
-  // Buscar materiais da API ao carregar a página
   useEffect(() => {
-    fetch("https://materialsapi.onrender.com/materials") // Substituir pela URL real
+    fetch("https://materialsapi.onrender.com/materials")
       .then(response => response.json())
       .then(data => setMaterials(data))
       .catch(error => console.error("Erro ao buscar materiais:", error));
   }, []);
 
-  // Carregar histórico do localStorage
   useEffect(() => {
     const storedHistory = JSON.parse(localStorage.getItem("ConvCilHistory")) || [];
     setHistory(storedHistory);
   }, []);
 
-  // Salvar no histórico quando o cálculo for feito
   useEffect(() => {
     if (totalResistance > 0 && heatFlux !== "0.00") {
       saveToHistory();
@@ -42,6 +45,8 @@ const CylindricalConvection = () => {
   const saveToHistory = () => {
     const newEntry = {
       deltaT,
+      hInternal,
+      hExternal,
       layers: layers.map(layer => ({ ...layer })),
       totalResistance: totalResistance.toFixed(6),
       heatFlux,
@@ -55,54 +60,74 @@ const CylindricalConvection = () => {
     });
   };
 
-  // Manipulação de entrada dos campos
   const handleLayerChange = (index, field, value) => {
     setLayers(prevLayers =>
       prevLayers.map((layer, i) => (i === index ? { ...layer, [field]: value } : layer))
     );
   };
 
-  const handleDeltaTChange = (e) => {
-    const value = e.target.value;
-    if (/^\d*\.?\d*$/.test(value)) {
-      setDeltaT(value);
-    }
+  const handleNumericInput = (value, setter) => {
+    if (typeof value !== "string") return;
+  
+    // Permite número parcial como "0.", "1.2", etc.
+    const sanitizedValue = value.replace(/[^0-9.]/g, "");
+  
+    // Evita múltiplos pontos flutuantes
+    const parts = sanitizedValue.split(".");
+    const safeValue = parts.length > 2 ? parts[0] + "." + parts[1] : sanitizedValue;
+  
+    setter(safeValue);
   };
+  
 
-  // Cálculo da resistência térmica e fluxo de calor
   const handleCalculate = () => {
     let totalRes = 0;
-    
+
     layers.forEach(layer => {
       const L = parseFloat(layer.length);
       const rInternal = parseFloat(layer.rInternal);
       const rExternal = parseFloat(layer.rExternal);
-      const hValue = parseFloat(layer.h);
 
       const selectedMaterial = materials.find(m => m.name === layer.material);
       const thermalConductivity = layer.state === "seco"
         ? selectedMaterial?.thermalConductivityDry
         : selectedMaterial?.thermalConductivityWet;
 
-      if (!isNaN(L) && !isNaN(rInternal) && !isNaN(rExternal) && !isNaN(hValue) &&
-          L > 0 && rInternal > 0 && rExternal > rInternal && hValue > 0 && thermalConductivity) {
-        totalRes += Math.log(rExternal / rInternal) / (2 * Math.PI * L * hValue * thermalConductivity);
+      if (!isNaN(L) && !isNaN(rInternal) && !isNaN(rExternal) &&
+          L > 0 && rInternal > 0 && rExternal > rInternal && thermalConductivity) {
+
+        // Resistência térmica por condução
+        const Rcond = Math.log(rExternal / rInternal) / (2 * Math.PI * L * thermalConductivity);
+        totalRes += Rcond;
       }
     });
+
+    const L = parseFloat(layers[0].length);
+    const rInternal = parseFloat(layers[0].rInternal);
+    const rExternal = parseFloat(layers[layers.length - 1].rExternal);
+    const hInt = parseFloat(hInternal);
+    const hExt = parseFloat(hExternal);
+
+    if (!isNaN(hInt) && !isNaN(L) && hInt > 0) {
+      totalRes += 1 / (hInt * 2 * Math.PI * rInternal * L);
+    }
+    if (!isNaN(hExt) && !isNaN(L) && hExt > 0) {
+      totalRes += 1 / (hExt * 2 * Math.PI * rExternal * L);
+    }
 
     setTotalResistance(totalRes);
     setHeatFlux(totalRes > 0 ? (parseFloat(deltaT || 0) / totalRes).toFixed(2) : "0.00");
   };
 
-  // Validação do formulário
   const isFormValid = () => {
-    if (!deltaT || isNaN(parseFloat(deltaT))) return false;
+    if (!deltaT || isNaN(parseFloat(deltaT)) || !hInternal || !hExternal || isNaN(parseFloat(hInternal)) || isNaN(parseFloat(hExternal))) {
+      return false;
+    }
     return layers.every(layer => 
-      layer.length && layer.rInternal && layer.rExternal && layer.h && layer.material &&
+      layer.length && layer.rInternal && layer.rExternal && layer.material &&
       !isNaN(parseFloat(layer.length)) &&
       !isNaN(parseFloat(layer.rInternal)) &&
       !isNaN(parseFloat(layer.rExternal)) &&
-      !isNaN(parseFloat(layer.h)) &&
       parseFloat(layer.rExternal) > parseFloat(layer.rInternal)
     );
   };
@@ -112,12 +137,11 @@ const CylindricalConvection = () => {
       <Typography variant="h4" gutterBottom>
         Transferência de Calor em Estruturas Cilíndricas
       </Typography>
-      
-      <TextField label="Diferença de Temperatura (ΔT em K)" value={deltaT} onChange={handleDeltaTChange} fullWidth margin="normal" />
 
-      <Typography variant="h6" gutterBottom>
-        Camadas
-      </Typography>
+    <TemperatureInput value={deltaT} onChange={(val) => handleNumericInput(val.target.value, setDeltaT)} />
+    <HInternalInput value={hInternal} onChange={(e) => handleNumericInput(e.target.value, setHInternal)} />
+    <HExternalInput value={hExternal} onChange={(val) => handleNumericInput(val.target.value, setHExternal)} />
+
       {layers.map((layer, index) => (
         <Box key={index} sx={{ marginBottom: "15px", textAlign: "center" }}>
           <MaterialSelector
@@ -128,10 +152,10 @@ const CylindricalConvection = () => {
             onStateChange={(value) => handleLayerChange(index, "state", value)}
           />
 
-          <TextField label="Comprimento do Cilindro (m)" value={layer.length} onChange={(e) => handleLayerChange(index, "length", e.target.value)} fullWidth margin="normal" />
-          <TextField label="Raio Interno (m)" value={layer.rInternal} onChange={(e) => handleLayerChange(index, "rInternal", e.target.value)} fullWidth margin="normal" />
-          <TextField label="Raio Externo (m)" value={layer.rExternal} onChange={(e) => handleLayerChange(index, "rExternal", e.target.value)} fullWidth margin="normal" />
-          <TextField label="Coeficiente de Convecção (h em W/m².K)" value={layer.h} onChange={(e) => handleLayerChange(index, "h", e.target.value)} fullWidth margin="normal" />
+<CylinderLengthInput value={layer.length} onChange={(e) => handleLayerChange(index, "length", e.target.value)}/>
+            <InternalRayInput value={layer.radius1} onChange={(e) => handleLayerChange(index, "rInternal", e.target.value)} />
+            <ExternalRayInput value={layer.radius2} onChange={(e) => handleLayerChange(index, "rExternal", e.target.value)} />
+          
 
           <IconButton onClick={() => setLayers(layers.filter((_, i) => i !== index))} sx={{ color: "#9b00d9" }}>
             <RemoveCircleIcon />
@@ -139,7 +163,7 @@ const CylindricalConvection = () => {
         </Box>
       ))}
 
-      <AddLayerButton onClick={() => setLayers([...layers, { length: "", rInternal: "", rExternal: "", h: "", material: "", state: "seco" }])} />
+      <AddLayerButton onClick={() => setLayers([...layers, { length: "", rInternal: "", rExternal: "", material: "", state: "seco" }])} />
       <CalculateButton onClick={handleCalculate} isFormValid={isFormValid()} />
       <ResultBox totalResistance={totalResistance} heatFlux={heatFlux} />
       <History historyData={history} />
