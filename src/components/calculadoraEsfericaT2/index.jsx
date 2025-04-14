@@ -11,7 +11,7 @@ import InternalCoefficientInput from "../Inputs/InternalConvectionCoefficient"
 import ExternalCoefficientInput from "../Inputs/ExternalConvectionCoefficient"
 import ExternalRayInput from "../Inputs/ExternalRayInput";
 import InternalRayInput from "../Inputs/InternalRayInput";
-import BubbleChart from "../CalculadoraEsferica/components/Graphic";
+import BubbleChart from "../Graphics/BubbleChart";
 
 const SphericalHeatTransfer = () => {
   const theme = useTheme();
