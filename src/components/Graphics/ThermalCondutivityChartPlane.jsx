@@ -1,17 +1,21 @@
-
+import React from 'react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from "recharts";
 
-const ThermalConductivityChart = ({ selectedMaterials }) => {
+const ThermalConductivityChartPlane = ({ selectedMaterials }) => {
+  console.log("Dados recebidos:", selectedMaterials);
+
+  // Preparando os dados para o gráfico
   const data = selectedMaterials.map((layer, index) => ({
-    name: `Camada  ${(index + 1)}: ${layer.material}`, 
-    k: layer.k, 
-    length: layer.length
+    name: `Camada ${(index + 1)}: ${layer.material}`,
+    k: layer.thermalConductivity,  // Agora bate com o nome certo
+    length: parseFloat(layer.length) || 0,
   }));
+  
 
   return (
     <ResponsiveContainer width="100%" height={300}>
       <BarChart data={data}>
-        <XAxis dataKey="name"  /> {/* Inclina os nomes para melhor visualização */}
+        <XAxis dataKey="name" />
         
         {/* Escala para Condutividade Térmica (W/mK) - Esquerda */}
         <YAxis 
@@ -37,4 +41,4 @@ const ThermalConductivityChart = ({ selectedMaterials }) => {
   );
 };
 
-export default ThermalConductivityChart;
+export default ThermalConductivityChartPlane;

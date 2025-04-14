@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Box,Typography, IconButton, useTheme } from "@mui/material";
+import { Box,Typography, IconButton, useTheme, Button } from "@mui/material";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import History from "./components/History";
 import MaterialSelector from "../materialSelector";
 import ResultBox from "../resultBox";
 import CalculateButton from "../calculateButton";
 import AddLayerButton from "../addLayerButton";
-import ThermalConductivityChart from "./components/Graphic";
+import ThermalConductivityChart from "../Graphics/ThermalCondutivityChartPlane";
 import TemperatureInput from "../Inputs/Temperature";
 import AreaInput from "../Inputs/AreaInput";
 import ThicknessInput from "../Inputs/thicknessInput";
@@ -22,6 +22,8 @@ const HeatTransferCalculator = () => {
   const [heatFlux, setHeatFlux] = useState("0.00");
   const [history, setHistory] = useState([]);
   const [materials, setMaterials] = useState([]);
+  const [viewMode, setViewMode] = useState("resultado"); // ou "grafico"
+
 
   useEffect(() => {
     fetch("https://materialsapi.onrender.com/materials")
@@ -140,22 +142,44 @@ const HeatTransferCalculator = () => {
       ))}
       <AddLayerButton onClick={addLayer} />
       <CalculateButton onClick={calculateResistance} isFormValid={isFormValid()} />
-      <ResultBox totalResistance={totalResistance} heatFlux={heatFlux} />
-      <ThermalConductivityChart
+      <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mt: 2 }}>
+  <Button 
+    variant={viewMode === "resultado" ? "contained" : "outlined"}
+    onClick={() => setViewMode("resultado")}
+    color="primary"
+  >
+    Ver Resultado
+  </Button>
+  <Button 
+    variant={viewMode === "grafico" ? "contained" : "outlined"}
+    onClick={() => setViewMode("grafico")}
+    color="secondary"
+  >
+    Ver Gráfico
+  </Button>
+</Box>
+
+      {viewMode === "resultado" ? (
+  <ResultBox totalResistance={totalResistance} heatFlux={heatFlux} />
+) : (
+  <ThermalConductivityChart
   selectedMaterials={layers.map(layer => {
     const selectedMaterial = materials.find(m => m.name === layer.material);
     if (!selectedMaterial) return null;
-
     return {
       name: layer.material,
-      area: layer.a, // Certificando que estamos pegando corretamente
+      area: layer.a,
       thermalConductivity:
         layer.state === "seco"
           ? selectedMaterial.thermalConductivityDry
-          : selectedMaterial.thermalConductivityWet
+          : selectedMaterial.thermalConductivityWet,
+      length: parseFloat(layer.h) || 0  // <- ESSA LINHA
     };
-  }).filter(material => material !== null)} 
+  }).filter(material => material !== null)}
 />
+
+)}
+
  <History historyData={history} />
     </Box>
   );

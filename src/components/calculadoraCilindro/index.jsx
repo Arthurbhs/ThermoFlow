@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { Box,Typography, IconButton, useTheme } from "@mui/material";
+import { Box,Typography, IconButton, useTheme, Button } from "@mui/material";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import History from "./componentes/History";
 import MaterialSelector from "../materialSelector";
 import ResultBox from "../resultBox";
 import CalculateButton from "../calculateButton";
 import AddLayerButton from "../addLayerButton";
-import ThermalConductivityChart from "./componentes/Graphic";
+import ThermalConductivityChart from "../Graphics/ThermalConductivityChart";
 import TemperatureInput from "../Inputs/Temperature";
 import CylinderLengthInput from "../Inputs/CylinderLengthInput";
 import InternalRayInput from "../Inputs/InternalRayInput";
 import ExternalRayInput from "../Inputs/ExternalRayInput";
+import BubbleChart from "../Graphics/BubbleChart";
 
 const CylindricalConduction = () => {
   const theme = useTheme();
@@ -22,6 +23,8 @@ const CylindricalConduction = () => {
   const [heatFlux, setHeatFlux] = useState(0);
   const [history, setHistory] = useState([]);
   const [materials, setMaterials] = useState([]);
+  const [activeView, setActiveView] = useState("result");
+
 
   // Efeito para carregar os materiais
   const LOCAL_STORAGE_KEY = "condCilHistory";
@@ -83,6 +86,23 @@ const CylindricalConduction = () => {
       return newLayers;
     });
   };
+
+  const chartData = layers
+  .map(layer => ({
+    material: layer.material || "Desconhecido",
+    k: parseFloat(layer.k) || 0,
+    length: parseFloat(layer.length) || 0,
+    r1: parseFloat(layer.radius1) || 0,
+    r2: parseFloat(layer.radius2) || 0,
+  }))
+  .filter(layer => layer.material);
+
+// Botões de visualização
+const views = [
+  { key: "result", label: "Resultado" },
+  { key: "chart", label: "Condutividade" },
+  { key: "bubble", label: "Raios" },
+];
   
   const handleStateChange = (index, state) => {
     setLayers(prev =>
@@ -203,15 +223,43 @@ const CylindricalConduction = () => {
 
       <AddLayerButton onClick={addLayer} />
       <CalculateButton onClick={handleCalculate} isFormValid={isFormValid()} />
-      <ThermalConductivityChart 
-  selectedMaterials={layers.map(layer => ({
-    material: layer.material,
-    k: parseFloat(layer.k) || 0, // Certificar que k é numérico
-    length: parseFloat(layer.length) || 0 // Certificar que length é numérico
-  })).filter(layer => layer.material)}
-/>
 
-     <ResultBox totalResistance={totalResistance} heatFlux={heatFlux} />
+      <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mb: 3 }}>
+  {views.map(({ key, label }) => (
+    <Button
+      key={key}
+      variant={activeView === key ? "contained" : "outlined"}
+      onClick={() => setActiveView(key)}
+    >
+      {label}
+    </Button>
+  ))}
+</Box>
+
+{activeView === "result" && (
+  <ResultBox totalResistance={totalResistance} heatFlux={heatFlux} />
+)}
+
+{activeView === "chart" && (
+  chartData.length > 0 ? (
+    <ThermalConductivityChart selectedMaterials={chartData} />
+  ) : (
+    <Typography variant="body2" color="text.secondary">
+      Nenhum material válido selecionado para exibir a condutividade térmica.
+    </Typography>
+  )
+)}
+
+{activeView === "bubble" && (
+  chartData.length > 0 ? (
+    <BubbleChart selectedMaterials={chartData} />
+  ) : (
+    <Typography variant="body2" color="text.secondary">
+      Nenhum dado de raio válido para exibir o gráfico.
+    </Typography>
+  )
+)}
+
       <History historyData={history} />
     </Box>
   );

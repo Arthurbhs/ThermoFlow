@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Box, Typography, IconButton, useTheme } from "@mui/material";
+import { Box, Typography, IconButton, useTheme, Button } from "@mui/material";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import History from "./Components/History";
 import MaterialSelector from "../materialSelector";
@@ -11,6 +11,7 @@ import InternalCoefficientInput from "../Inputs/InternalConvectionCoefficient"
 import ExternalCoefficientInput from "../Inputs/ExternalConvectionCoefficient"
 import ExternalRayInput from "../Inputs/ExternalRayInput";
 import InternalRayInput from "../Inputs/InternalRayInput";
+import BubbleChart from "../CalculadoraEsferica/components/Graphic";
 
 const SphericalHeatTransfer = () => {
   const theme = useTheme();
@@ -23,6 +24,8 @@ const SphericalHeatTransfer = () => {
   const [heatFlux, setHeatFlux] = useState("0.00");
   const [history, setHistory] = useState([]);
   const [materials, setMaterials] = useState([]);
+  const [view, setView] = useState("result");
+
 
   const LOCAL_STORAGE_KEY = "condEsfHistory";
 
@@ -192,7 +195,31 @@ const SphericalHeatTransfer = () => {
     <AddLayerButton onClick={addLayer} />
     <CalculateButton onClick={calculateResistanceAndHeatFlux} isFormValid={isFormValid()} />
   
-    <ResultBox totalResistance={totalResistance} heatFlux={heatFlux} />
+    <Box sx={{ display: "flex", justifyContent: "center", gap: 2, marginTop: 2 }}>
+  <Button
+    variant={view === "result" ? "contained" : "outlined"}
+    onClick={() => setView("result")}
+  >
+    Resultado
+  </Button>
+  <Button
+    variant={view === "chart" ? "contained" : "outlined"}
+    onClick={() => setView("chart")}
+  >
+    Gráfico
+  </Button>
+</Box>
+
+{view === "result" && (
+  <ResultBox totalResistance={totalResistance} heatFlux={heatFlux} />
+)}
+
+{view === "chart" && layers.length > 0 && (
+ <BubbleChart selectedMaterials={layers} />
+
+)}
+
+
     <History historyData={history} />
   </Box>
   

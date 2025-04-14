@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Box, Typography, IconButton, useTheme } from "@mui/material";
+import { Box, Typography, IconButton, useTheme, Button } from "@mui/material";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import History from "./components/History";
 import MaterialSelector from "../materialSelector";
 import ResultBox from "../resultBox";
 import CalculateButton from "../calculateButton";
 import AddLayerButton from "../addLayerButton";
-import BubbleChart from "./components/Graphic";
+import BubbleChart from "../Graphics/BubbleChart";
 import TemperatureInput from "../Inputs/Temperature";
 import InternalRayInput from "../Inputs/InternalRayInput";
 import ExternalRayInput from "../Inputs/ExternalRayInput";
@@ -18,6 +18,8 @@ const SphericalHeatTransfer = () => {
   const [heatFlux, setHeatFlux] = useState("0.00");
   const [history, setHistory] = useState([]);
   const [materials, setMaterials] = useState([]);
+  const [view, setView] = useState("result"); 
+
 
   const LOCAL_STORAGE_KEY = "condEsfHistory";
 
@@ -178,10 +180,31 @@ const handleStateChange = (index, state) => {
       ))}
       <AddLayerButton onClick={addLayer} />
       <CalculateButton onClick={calculateResistanceAndHeatFlux} isFormValid={isFormValid()} />
-        {layers.length > 0 && layers.some(layer => layer.k && layer.r2) && (
-        <BubbleChart selectedMaterials={layers} />
-      )}
-      <ResultBox totalResistance={totalResistance} heatFlux={heatFlux} />
+
+      <Box sx={{ display: "flex", justifyContent: "center", gap: 2, marginTop: 2 }}>
+  <Button
+     variant={view === "result" ? "contained" : "outlined"}
+    onClick={() => setView("result")}
+  >
+    Resultado
+  </Button>
+  <Button
+    variant={view === "chart" ? "contained" : "outlined"}
+    onClick={() => setView("chart")}
+  >
+    Gráfico
+  </Button>
+</Box>
+
+
+{view === "chart" && layers.length > 0 && layers.some(layer => layer.k && layer.r2) && (
+  <BubbleChart selectedMaterials={layers} />
+)}
+
+{view === "result" && (
+  <ResultBox totalResistance={totalResistance} heatFlux={heatFlux} />
+)}
+
       <History historyData={history} />
     </Box>
   );
