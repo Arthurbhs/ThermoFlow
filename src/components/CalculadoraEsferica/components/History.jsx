@@ -52,12 +52,13 @@ const History = ({ historyData }) => {
                     📅 Data: {entry.timestamp}
                   </Typography>
                   {entry.layers.map((layer, i) => (
-                    <Typography key={i} variant="body2" color="text.secondary">
-                      🔹 <strong>Material:</strong> {layer.material} | 🔘{" "}
-                      <strong>Raio Interno:</strong> {layer.r1} m | ⚪{" "}
-                      <strong>Raio Externo:</strong> {layer.r2} m
-                    </Typography>
-                  ))}
+  <Typography key={i} variant="body2" color="text.secondary">
+    🔹 <strong>Material:</strong> {layer.material} ({layer.state}) | 🔘{" "}
+    <strong>Raio Interno:</strong> {layer.r1} m | ⚪{" "}
+    <strong>Raio Externo:</strong> {layer.r2} m
+  </Typography>
+))}
+
                 </>
               }
             />

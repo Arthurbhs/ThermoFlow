@@ -56,20 +56,25 @@ const History = ({ historyData }) => {
               }
               secondary={
                 <Box>
-                  📅 Data: {entry.timestamp}
-                  <br />
-                  <strong>Camadas:</strong>
-                  <ul style={{ paddingLeft: "16px", margin: 0 }}>
-                    {entry.layers.map((layer, i) => (
-                      <li key={i} style={{ fontSize: "14px" }}>
-                        🏗️ <strong>L:</strong> {layer.length || "N/A"} m |{" "}
-                        <strong>r₁:</strong> {layer.rInternal || "N/A"} m |{" "}
-                        <strong>r₂:</strong> {layer.rExternal || "N/A"} m |{" "}
-                        <strong>h:</strong> {layer.h || "N/A"} W/m²K
-                      </li>
-                    ))}
-                  </ul>
-                </Box>
+                📅 Data: {entry.timestamp}
+                <br />
+                ♨️ <strong>h interno:</strong> {entry.hInternal} W/m²K |{" "}
+                <strong>h externo:</strong> {entry.hExternal} W/m²K
+                <br />
+                <strong>Camadas:</strong>
+                <ul style={{ paddingLeft: "16px", margin: 0 }}>
+                  {entry.layers.map((layer, i) => (
+                    <li key={i} style={{ fontSize: "14px" }}>
+                      🏗️ <strong>Material:</strong> {layer.material} ({layer.state}) |{" "}
+                      <strong>k:</strong> {layer.k} W/m·K |{" "}
+                      <strong>L:</strong> {layer.length} m |{" "}
+                      <strong>r₁:</strong> {layer.radius1} m |{" "}
+                      <strong>r₂:</strong> {layer.radius2} m
+                    </li>
+                  ))}
+                </ul>
+              </Box>
+              
               }
             />
           </ListItem>

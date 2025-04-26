@@ -18,7 +18,7 @@ const History = ({ historyData }) => {
   }, [historyData]);
 
   const clearHistory = () => {
-    localStorage.removeItem("heatTransferHistory");
+    localStorage.removeItem("condEsfHistory");
     setHistory([]);
   };
 
@@ -55,20 +55,27 @@ const History = ({ historyData }) => {
                 </Typography>
               }
               secondary={
-                <Box sx={{ textAlign: "left", color: theme.palette.text.secondary }}>
-                  📅 Data: {entry.timestamp}
-                  <br />
-                  <strong>Camadas:</strong>
-                  <ul style={{ paddingLeft: "16px", margin: 0 }}>
-                    {entry.layers.map((layer, i) => (
-                      <li key={i} style={{ fontSize: "14px" }}>
-                        🏗️ <strong>h:</strong> {layer.h || "N/A"} W/m²K |{" "}
-                        <strong>r1:</strong> {layer.r1 || "N/A"} m |{" "}
-                        <strong>r2:</strong> {layer.r2 || "N/A"} m
-                      </li>
-                    ))}
-                  </ul>
-                </Box>
+           
+                  <Box sx={{ textAlign: "left", color: theme.palette.text.secondary }}>
+                    📅 Data: {entry.timestamp}
+                    <br />
+                    ♨️ <strong>h interno:</strong> {entry.hInt || "N/A"} W/m²K |{" "}
+                    <strong>h externo:</strong> {entry.hExt || "N/A"} W/m²K
+                    <br />
+                    <strong>Camadas:</strong>
+                    <ul style={{ paddingLeft: "16px", margin: 0 }}>
+                      {entry.layers.map((layer, i) => (
+                       <li key={i} style={{ fontSize: "14px" }}>
+                       🏗️ <strong>Material:</strong> {layer.material || "N/A"} (
+                       {layer.state || "N/A"}) | <strong>r₁:</strong> {layer.r1 || "N/A"} m |{" "}
+                       <strong>r₂:</strong> {layer.r2 || "N/A"} m
+                     </li>
+                     
+                      ))}
+                    </ul>
+                  </Box>
+                
+                
               }
             />
           </ListItem>

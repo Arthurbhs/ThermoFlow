@@ -177,10 +177,12 @@ const views = [
       heatFlux: (parseFloat(deltaT) / totalRes).toFixed(2),
       layers: layers.map(layer => ({
         material: layer.material || "Desconhecido",
+        state: layer.state || "seco",
         length: layer.length || "0",
         radius1: layer.radius1 || "0",
         radius2: layer.radius2 || "0"
       })),
+      
       timestamp: new Date().toLocaleString(),
     };
   

@@ -11,8 +11,11 @@ import HInternalInput from "../Inputs/InternalConvectionCoefficient";
 import HExternalInput from "../Inputs/ExternalConvectionCoefficient";
 import ThicknessInput from "../Inputs/thicknessInput";
 import ThermalConductivityChartPlane from "../Graphics/ThermalCondutivityChartPlane"
+import AreaInput from "../Inputs/AreaInput"
 
-const LOCAL_STORAGE_KEY = "convPlanHistory";
+const LOCAL_STORAGE_KEY = "heatTransferHistory";
+
+
 
 const HeatTransferCalculator = () => {
   const theme = useTheme();
@@ -78,8 +81,9 @@ const HeatTransferCalculator = () => {
           ? selectedMaterial.thermalConductivityDry
           : selectedMaterial.thermalConductivityWet;
 
-      const thickness = parseFloat(h);
-      const areaValue = parseFloat(a);
+          const thickness = parseFloat(h);
+          const areaValue = parseFloat(a || area);
+          
 
       if (!isNaN(thickness) && !isNaN(areaValue) && thermalConductivity > 0) {
         total += thickness / (thermalConductivity * areaValue);
@@ -133,7 +137,7 @@ const HeatTransferCalculator = () => {
     setHistory(updatedHistory);
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedHistory));
   };
-
+  
   const addLayer = () => setLayers([...layers, { h: "", a: area, material: "", state: "seco" }]);
   const removeLayer = (index) => layers.length > 1 && setLayers(layers.filter((_, i) => i !== index));
 
@@ -172,6 +176,8 @@ const HeatTransferCalculator = () => {
             onMaterialChange={(value) => handleLayerChange(index, "material", value)}
             onStateChange={(value) => handleLayerChange(index, "state", value)}
           />
+          <AreaInput value={area} onChange={(e) => handleNumericInput(e.target.value, setArea)} />
+
           <ThicknessInput value={layer.h} onChange={(e) => handleNumericInput(e.target.value, (val) => handleLayerChange(index, "h", val))} />
           <IconButton onClick={() => removeLayer(index)} sx={{ color: "#9b00d9" }}>
             <RemoveCircleIcon />

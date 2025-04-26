@@ -108,7 +108,7 @@ const HeatTransferCalculator = () => {
   };
 
   const saveToHistory = () => {
-    const newEntry = { deltaT, area, layers, totalResistance, heatFlux, timestamp: new Date().toLocaleString() };
+    const newEntry = { deltaT, area, layers, totalResistance, heatFlux,  timestamp: new Date().toLocaleString() };
     const updatedHistory = [newEntry, ...history.slice(0, 2)];
     setHistory(updatedHistory);
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedHistory));

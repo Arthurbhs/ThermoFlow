@@ -209,23 +209,26 @@ const CylindricalConvection = () => {
       heatFlux: (parseFloat(deltaT) / totalRes).toFixed(2),
       layers: layers.map((layer) => ({
         material: layer.material || "Desconhecido",
+        state: layer.state || "seco",
+        k: layer.k || "0",
         length: layer.length || "0",
         radius1: layer.radius1 || "0",
         radius2: layer.radius2 || "0",
       })),
       timestamp: new Date().toLocaleString(),
     };
-
+  
     let storedHistory = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) || [];
     storedHistory.unshift(newEntry);
-
+  
     if (storedHistory.length > 3) {
       storedHistory = storedHistory.slice(0, 3);
     }
-
+  
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(storedHistory));
     setHistory([...storedHistory]);
   };
+  
 
   const views = [
     { key: "result", label: "Resultado" },

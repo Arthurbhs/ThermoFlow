@@ -149,7 +149,12 @@ const handleStateChange = (index, state) => {
 
     saveToHistory({
       deltaT,
-      layers: layers.map(layer => ({ material: layer.material, r1: layer.r1, r2: layer.r2 })),
+      layers: layers.map(layer => ({
+        material: layer.material,
+        r1: layer.r1,
+        r2: layer.r2,
+        state: layer.state
+      })),
       totalResistance: !isNaN(totalRes) ? Number(totalRes) : "N/A",
       heatFlux: heatFluxValue,
       timestamp: new Date().toLocaleString()

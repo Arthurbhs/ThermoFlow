@@ -60,14 +60,16 @@ const History = ({ historyData }) => {
                 >
                   📅 Data: {entry.timestamp}
                   <ul style={{ paddingLeft: "16px", margin: 0 }}>
-                    {entry.layers.map((layer, i) => (
-                      <li key={i}>
-                        🔹 <strong>Material:</strong> {layer.material || "N/A"} |{" "}
-                        <strong>h:</strong> {layer.h || "N/A"} W/m²K |{" "}
-                        <strong>Área:</strong> {layer.a || "N/A"} m²
-                      </li>
-                    ))}
-                  </ul>
+  {entry.layers.map((layer, i) => (
+    <li key={i}>
+      🔹 <strong>Material:</strong> {layer.material || "N/A"} |{" "}
+      <strong>h:</strong> {layer.h || "N/A"} m |{" "}
+      <strong>Área:</strong> {layer.a || "N/A"} m² |{" "}
+      <strong>Estado:</strong> {layer.state || "seco"}
+    </li>
+  ))}
+</ul>
+
                 </Box>
               }
             />

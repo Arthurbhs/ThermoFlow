@@ -18,7 +18,7 @@ const History = ({ historyData }) => {
   }, [historyData]);
 
   const clearHistory = () => {
-    localStorage.removeItem("heatTransferHistory");
+    localStorage.removeItem("convPlanHistory");
     setHistory([]);
   };
 
@@ -49,10 +49,10 @@ const History = ({ historyData }) => {
             <ListItemText
               primary={
                 <Typography variant="body1" sx={{ textAlign: "left" }}>
-                  ΔT: {entry.deltaT}K | Resistência:{" "}
-                  {Number(entry.totalResistance).toFixed(6)} K/W | Fluxo:{" "}
-                  {entry.heatFlux} W
-                </Typography>
+                ΔT: {entry.deltaT}K |   h_int: {entry.hInternal} | h_ext: {entry.hExternal}<br />
+                Resistência: {Number(entry.totalResistance).toFixed(6)} K/W | Fluxo: {entry.heatFlux} W
+              </Typography>
+              
               }
               secondary={
                 <Box
@@ -61,11 +61,14 @@ const History = ({ historyData }) => {
                   📅 Data: {entry.timestamp}
                   <ul style={{ paddingLeft: "16px", margin: 0 }}>
                     {entry.layers.map((layer, i) => (
-                      <li key={i}>
-                        🔹 <strong>Material:</strong> {layer.material || "N/A"} |{" "}
-                        <strong>h:</strong> {layer.h || "N/A"} W/m²K |{" "}
-                        <strong>Área:</strong> {layer.a || "N/A"} m²
-                      </li>
+                    <li key={i}>
+                    🔹 <strong>Material:</strong> {layer.material || "N/A"} |{" "}
+                    <strong>h:</strong> {layer.h || "N/A"} m |{" "}
+                    <strong>Área:</strong> {entry.area || "N/A"}m² |{" "} 
+                    <strong>Estado:</strong> {layer.state || "seco"}
+                  </li>
+                  
+                   
                     ))}
                   </ul>
                 </Box>

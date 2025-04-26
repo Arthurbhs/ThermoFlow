@@ -60,6 +60,9 @@ const Header = () => {
         <MenuItem onClick={() => setDrawerOpen(false)} component={Link} to="/Historia">
           Sobre
         </MenuItem>
+        <MenuItem onClick={() => setDrawerOpen(false)} component={Link} to="/Materiais">
+          Materiais
+        </MenuItem>
 
         <Box sx={{ display: "flex", alignItems: "center", marginTop: 2, ml: 2 }}>
           {darkMode ? <Brightness4 sx={{ mr: 2 }} /> : <Brightness7 sx={{ mr: 2 }} />}
