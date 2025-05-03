@@ -55,10 +55,10 @@ const Header = () => {
         </Box>
 
         <MenuItem onClick={() => setDrawerOpen(false)} component={Link} to="/Calculadora">
-          Calcular
+          Calculadora
         </MenuItem>
         <MenuItem onClick={() => setDrawerOpen(false)} component={Link} to="/Historia">
-          Sobre
+          Estudos
         </MenuItem>
         <MenuItem onClick={() => setDrawerOpen(false)} component={Link} to="/Materiais">
           Materiais

@@ -38,33 +38,51 @@ const MaterialSelectionPage = () => {
   }
 
   return (
-    <Box>          <Header/>
-    <Box display="flex" p={4} gap={4}>
+<Box>          
+  <Header/>
 
-      {/* Painel principal à esquerda */}
-      <Box flex={1}>
-        <MaterialDisplay material={selected} />
-      </Box>
+  {/* Painel principal à esquerda */}
+  <Box flex={1}>
+    <MaterialDisplay material={selected} />
+  </Box>
 
-      {/* Grid de botões à direita */}
-      <Box flex={1} overflow="auto" maxHeight="80vh">
-        <Typography variant="h6" mb={2}>
-          Selecione um material
-        </Typography>
-        <Grid container spacing={2}>
-          {materials.map((mat, index) => (
-            <Grid item xs={4} sm={4} md={4} key={index}>
-              <MaterialsButton
-                material={mat}
-                onSelect={setSelected}
-                isSelected={mat.id === selected?.id}
-              />
-            </Grid>
-          ))}
-        </Grid>
-      </Box>
-    </Box>
-    </Box>
+  <Box mt={4}>
+  <Typography
+    variant="h6"
+    mb={2}
+    sx={{
+      textAlign: 'center',
+      color: 'purple',
+      fontWeight: 'bold',
+    }}
+  >
+    Selecione um material
+  </Typography>
+
+  <Grid
+    container
+    spacing={2}
+    sx={(theme) => ({
+      backgroundColor:
+        theme.palette.mode === 'dark' ? theme.palette.grey[900] : '#ffffff',
+      padding: 2,
+      borderRadius: 2,
+    })}
+  >
+    {materials.map((mat, index) => (
+      <Grid item key={index} sx={{ width: '10%' }}>
+        <MaterialsButton
+          material={mat}
+          onSelect={setSelected}
+          isSelected={mat.id === selected?.id}
+        />
+      </Grid>
+    ))}
+  </Grid>
+</Box>
+
+</Box>
+
   );
 };
 

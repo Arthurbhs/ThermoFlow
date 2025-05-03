@@ -1,6 +1,5 @@
-// Usa thumbnail até a imagem principal carregar
 import React, { useState } from 'react';
-import { Box, Typography, Card, CardContent, CardMedia, Divider } from '@mui/material';
+import { Box, Typography, CardContent, CardMedia, Divider, Grid } from '@mui/material';
 
 const MaterialShow = ({ material }) => {
   const [loaded, setLoaded] = useState(false);
@@ -10,60 +9,79 @@ const MaterialShow = ({ material }) => {
   }
 
   return (
-    <Card>
-      <Box sx={{ position: 'relative', height: 300, overflow: 'hidden' }}>
-        <CardMedia
-          component="img"
-          height="300"
-          image={material.thumbnail}
-          alt="thumbnail"
-            loading="lazy"
-          sx={{
-            position: 'absolute',
-            width: '100%',
-            height: '100%',
-            filter: 'blur(10px)',
-            transition: 'opacity 0.3s',
-            opacity: loaded ? 0 : 1,
-          }}
-        />
-        <CardMedia
-          component="img"
-          height="300"
-          image={material.image}
-          alt={material.name}
-          onLoad={() => setLoaded(true)}
-            loading="lazy"
-          sx={{
-            position: 'absolute',
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            transition: 'opacity 0.3s',
-            opacity: loaded ? 1 : 0,
-          }}
-        />
-      </Box>
+    <Box sx={{ p: 2 }}>
+      <Grid container spacing={2} alignItems="flex-start">
+        {/* Imagem à esquerda */}
+        <Grid item xs={12} md={4}>
+          <Box sx={{ position: 'relative', width: '100%', paddingTop: '100%', overflow: 'hidden', borderRadius: 2 }}>
+            {/* Thumbnail borrado */}
+            <CardMedia
+              component="img"
+              image={material.thumbnail}
+              alt="thumbnail"
+              loading="lazy"
+              onLoad={() => setLoaded(false)}
+              sx={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                filter: 'blur(10px)',
+                opacity: loaded ? 0 : 1,
+                transition: 'opacity 0.3s',
+              }}
+            />
+            {/* Imagem principal */}
+            <CardMedia
+              component="img"
+              image={material.image}
+              alt={material.name}
+              loading="lazy"
+              onLoad={() => setLoaded(true)}
+              sx={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                opacity: loaded ? 1 : 0,
+                transition: 'opacity 0.3s',
+              }}
+            />
+          </Box>
+        </Grid>
 
-      <CardContent>
-        <Typography variant="h5" gutterBottom>{material.name}</Typography>
-        <Typography variant="body2" color="text.secondary" paragraph>
-          {material.description}
-        </Typography>
+        {/* Texto à direita */}
+        <Grid item xs={12} md={8}>
+          <CardContent sx={{ p: 0 }}>
+            <Typography variant="h5" gutterBottom>
+              {material.name}
+            </Typography>
 
-        <Divider sx={{ my: 2 }} />
+            <Divider sx={{ my: 2 }} />
 
-        <Typography variant="body1"><strong>Tipo:</strong> {material.type}</Typography>
-        <Typography variant="body1"><strong>Densidade:</strong> {material.density} kg/m³</Typography>
-        <Typography variant="body1">
-          <strong>Condutividade térmica (seco):</strong> {material.thermalConductivityDry} W/m·K
-        </Typography>
-        <Typography variant="body1">
-          <strong>Condutividade térmica (molhado):</strong>{' '}
-          {material.thermalConductivityWet !== null ? `${material.thermalConductivityWet} W/m·K` : 'N/A'}
-        </Typography>
-      </CardContent>
-    </Card>
+            <Typography variant="body1"><strong>Tipo:</strong> {material.type}</Typography>
+            <Typography variant="body1"><strong>Densidade:</strong> {material.density} kg/m³</Typography>
+            <Typography variant="body1">
+              <strong>Condutividade térmica (seco):</strong> {material.thermalConductivityDry} W/m·K
+            </Typography>
+            <Typography variant="body1" gutterBottom>
+              <strong>Condutividade térmica (molhado):</strong>{' '}
+              {material.thermalConductivityWet !== null ? `${material.thermalConductivityWet} W/m·K` : 'N/A'}
+            </Typography>
+
+            <Divider sx={{ my: 2 }} />
+
+            <Typography variant="body2" color="text.secondary" paragraph>
+              {material.description}
+            </Typography>
+          </CardContent>
+        </Grid>
+      </Grid>
+    </Box>
   );
 };
 
