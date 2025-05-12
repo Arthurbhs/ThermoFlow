@@ -13,8 +13,10 @@ const MaterialsButton = ({ material, onSelect, isSelected }) => (
       borderColor: isSelected ? 'primary.main' : 'transparent',
       overflow: 'hidden',
       borderRadius: 2,
-      height: 100,
+      aspectRatio: '1', // mantém o botão quadrado
       width: '100%',
+      maxWidth: 120, // evita que fique muito grande
+      height: 'auto',
       transition: 'transform 0.2s',
       transform: isSelected ? 'scale(1.05)' : 'none',
       '&:hover .overlay': {
@@ -56,7 +58,7 @@ const MaterialsButton = ({ material, onSelect, isSelected }) => (
         px: 1,
       }}
     >
-      <Typography variant="caption">{material?.name}</Typography>
+      <Typography variant="caption" noWrap>{material?.name}</Typography>
     </Box>
   </Button>
 );

@@ -31,7 +31,7 @@ const HeatTransferCalculator = () => {
   const [viewMode, setViewMode] = useState("resultado");
 
   useEffect(() => {
-    fetch("https://materialsapi.onrender.com/materials")
+    fetch("https://minha-api-workers.apimateriallistcalculator.workers.dev/src/index")
       .then(response => response.json())
       .then(data => setMaterials(data))
       .catch(error => console.error("Erro ao carregar materiais:", error));

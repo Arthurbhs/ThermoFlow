@@ -13,7 +13,7 @@ const MaterialSelectionPage = () => {
   useEffect(() => {
     const fetchMaterials = async () => {
       try {
-        const res = await fetch("https://materialsapi.onrender.com/materials");
+        const res = await fetch("https://minha-api-workers.apimateriallistcalculator.workers.dev/src/index");
         const data = await res.json();
         setMaterials(data);
         setSelected(data[0]); // seleciona o primeiro por padrão
@@ -59,26 +59,42 @@ const MaterialSelectionPage = () => {
     Selecione um material
   </Typography>
 
-  <Grid
-    container
-    spacing={2}
-    sx={(theme) => ({
-      backgroundColor:
-        theme.palette.mode === 'dark' ? theme.palette.grey[900] : '#ffffff',
-      padding: 2,
-      borderRadius: 2,
-    })}
-  >
-    {materials.map((mat, index) => (
-      <Grid item key={index} sx={{ width: '10%' }}>
-        <MaterialsButton
-          material={mat}
-          onSelect={setSelected}
-          isSelected={mat.id === selected?.id}
-        />
-      </Grid>
-    ))}
-  </Grid>
+  <Box mt={4}>
+
+  <Box display="flex" justifyContent="center">
+    <Grid
+      container
+      spacing={2}
+      justifyContent="center"
+      sx={(theme) => ({
+        backgroundColor:
+          theme.palette.mode === 'dark' ? theme.palette.grey[900] : '#ffffff',
+        padding: 2,
+        borderRadius: 2,
+        width: '100%',
+        maxWidth: 1200,
+        margin: '0 auto', // centraliza horizontalmente
+      })}
+    >
+      {materials.map((mat, index) => (
+        <Grid
+          item
+          key={index}
+          xs={6}   // 2 colunas no celular
+          sm={3}   // 4 colunas em tablets
+          md={2.4} // 5 colunas em desktop
+        >
+          <MaterialsButton
+            material={mat}
+            onSelect={setSelected}
+            isSelected={mat.id === selected?.id}
+          />
+        </Grid>
+      ))}
+    </Grid>
+  </Box>
+</Box>
+
 </Box>
 
 </Box>

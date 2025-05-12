@@ -41,7 +41,7 @@ const CylindricalConvection = () => {
 
   // Carregar materiais
   useEffect(() => {
-    fetch("https://materialsapi.onrender.com/materials")
+    fetch("https://minha-api-workers.apimateriallistcalculator.workers.dev/src/index")
       .then((response) => response.json())
       .then((data) => setMaterials(data))
       .catch((error) =>
@@ -221,8 +221,8 @@ const CylindricalConvection = () => {
     let storedHistory = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) || [];
     storedHistory.unshift(newEntry);
   
-    if (storedHistory.length > 3) {
-      storedHistory = storedHistory.slice(0, 3);
+    if (storedHistory.length > 10) {
+      storedHistory = storedHistory.slice(0, 10);
     }
   
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(storedHistory));
