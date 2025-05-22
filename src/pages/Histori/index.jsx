@@ -1,15 +1,25 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Box, Typography, Fade } from "@mui/material";
 import Header from "../../components/Header";
-import Trasfer from "../../assets/images.jpg";
+import Trasfer from "../../assets/images.png";
 import Form from "../../assets/formula.png";
 import Fourier from "../../assets/JosephFourier .jpeg";
 import "@fontsource/playfair-display";
 import "@fontsource/roboto";
+import { useNavigate } from "react-router-dom";
+import { useTheme } from "@mui/material/styles";
+
+
+
+
 
 const AlinhadoComImagem = () => {
   const [showInfo, setShowInfo] = useState(null);
   const popupRef = useRef(null);
+const navigate = useNavigate();
+const theme = useTheme();
+const textColor = theme.palette.mode === "dark" ? "#e0e0e0" : "#424242";
+const boxColor = theme.palette.mode === "dark" ? "#424242" : "white";
 
   // Fecha pop-up ao clicar fora dele
   useEffect(() => {
@@ -83,7 +93,7 @@ const AlinhadoComImagem = () => {
           <Typography
             variant="body1"
             sx={{
-              color: "#424242",
+              color: textColor,
               fontFamily: "'Roboto', sans-serif",
               fontSize: "18px",
               lineHeight: 1.8,
@@ -103,7 +113,7 @@ const AlinhadoComImagem = () => {
                 ref={popupRef}
                 sx={{
                   position: "absolute",
-                  backgroundColor: "white",
+                  backgroundColor: boxColor,
                   padding: 3,
                   boxShadow: 3,
                   borderRadius: 2,
@@ -115,7 +125,7 @@ const AlinhadoComImagem = () => {
                   transform: "translateX(-50%)",
                 }}
               >
-                <Typography variant="body1" sx={{ color: "#424242", fontSize: "18px", lineHeight: 1.8 }}>
+                <Typography variant="body1" sx={{ color: textColor, fontSize: "18px", lineHeight: 1.8 }}>
                   Jean-Baptiste Joseph Fourier, nascido em Auxerre no Império Francês, foi um físico e matemático
                   conhecido por suas contribuições às séries matemáticas, especialmente pela famosa Série de Fourier.
                 </Typography>
@@ -131,7 +141,7 @@ const AlinhadoComImagem = () => {
                     }}
                   />
                 </Box>
-                <Typography variant="body1" sx={{ color: "#424242", fontSize: "18px", lineHeight: 1.8 }}>
+                <Typography variant="body1" sx={{ color: textColor, fontSize: "18px", lineHeight: 1.8 }}>
                   Jean-Baptiste Joseph Fourier. <br />
                   De 21/03/1768 a 17/05/1830
                 </Typography>
@@ -142,7 +152,7 @@ const AlinhadoComImagem = () => {
            <Typography
             variant="body1"
             sx={{
-              color: "#424242",
+              color: textColor,
               fontFamily: "'Roboto', sans-serif",
               fontSize: "18px",
               lineHeight: 1.8,
@@ -166,7 +176,7 @@ const AlinhadoComImagem = () => {
       <Typography
           variant="body1"
           sx={{
-            color: "#424242",
+            color: textColor,
             fontFamily: "'Roboto', sans-serif",
             fontSize: "18px",
             lineHeight: 1.8,
@@ -183,7 +193,7 @@ A condutibilidade térmica de um material é uma propriedade física desse mater
         >
           O Impacto da Lei de Fourier
         </Typography>
-        <Typography variant="body1" sx={{ color: "#424242", fontFamily: "'Roboto', sans-serif", fontSize: "18px", lineHeight: 1.8 }}>
+        <Typography variant="body1" sx={{ color: textColor, fontFamily: "'Roboto', sans-serif", fontSize: "18px", lineHeight: 1.8 }}>
         Fourier criou essa lei para entender e quantificar a transferência de calor, essencial na Revolução Industrial, em sistemas térmicos e de engenharia. Sua teoria foi apresentada em 1807 e formalizada em 1822 no livro{" "}
           <span
             onClick={() => toggleInfo("teoria")}
@@ -197,7 +207,7 @@ A condutibilidade térmica de um material é uma propriedade física desse mater
            ref={popupRef}
            sx={{
              position: "absolute",
-             backgroundColor: "white",
+             backgroundColor: boxColor,
              padding: 3,
              boxShadow: 3,
              borderRadius: 2,
@@ -209,7 +219,7 @@ A condutibilidade térmica de um material é uma propriedade física desse mater
              transform: "translateX(-50%)",
            }}
          >
-              <Typography variant="body1" sx={{ color: "#424242", fontSize: "18px", lineHeight: 1.8 }}>
+              <Typography variant="body1" sx={{ color: textColor, fontSize: "18px", lineHeight: 1.8 }}>
               Nessa teoria, todos os corpos emitem e recebem calor radiante de todas as direções, independente de suas temperaturas relativas. Se dois corpos estiverem com temperaturas diferentes, durante a troca, o corpo mais frio receberá mais calor do que irá emitir, até que o equilíbrio térmico seja estabelecido.
               </Typography>
             </Box>
@@ -229,7 +239,7 @@ A condutibilidade térmica de um material é uma propriedade física desse mater
            ref={popupRef}
            sx={{
              position: "absolute",
-             backgroundColor: "white",
+             backgroundColor: boxColor,
              padding: 3,
              boxShadow: 3,
              borderRadius: 2,
@@ -241,7 +251,7 @@ A condutibilidade térmica de um material é uma propriedade física desse mater
              transform: "translateX(-50%)",
            }}
          >
-              <Typography variant="body1" sx={{ color: "#424242", fontSize: "20px", lineHeight: 1.8 }}>
+              <Typography variant="body1" sx={{ color: textColor, fontSize: "20px", lineHeight: 1.8 }}>
               Série de Fourier é uma forma de série trigonométrica usada para representar funções infinitas e periódicas complexas dos processos físicos, na forma de funções trigonométricas simples de senos e cossenos. Isto é, simplificando a visualização e manipulação de funções complexas.
               </Typography>
             </Box>
@@ -253,6 +263,56 @@ A condutibilidade térmica de um material é uma propriedade física desse mater
           Além disso, a lei de Fourier está intrinsecamente ligada ao conceito de transformadas de Fourier, um método matemático fundamental em análise de sinais e imagem. As aplicações dessa técnica são observadas em áreas como compressão de imagens digitais e processamento de áudio.
           </Typography>
       </Box>
+   <Box sx={{ textAlign: "center", padding: 4 }}>
+ <Box sx={{ textAlign: "center", padding: 4, display: "flex", justifyContent: "center", gap: 2 }}>
+   <button
+     onClick={() => navigate("/estudos_pag1")}
+     style={{
+       backgroundColor: "#7000b5",
+       color: "#fff",
+       padding: "10px 20px",
+       borderRadius: "8px",
+       border: "none",
+       cursor: "pointer",
+       fontSize: "16px"
+     }}
+   >
+     1
+   </button>
+ 
+   <button
+     onClick={() => navigate("/estudos_pag2")}
+     style={{
+       backgroundColor: "#7000b5",
+       color: "#fff",
+       padding: "10px 20px",
+       borderRadius: "8px",
+       border: "none",
+       cursor: "pointer",
+       fontSize: "16px"
+     }}
+   >
+     2
+   </button>
+ 
+   <button
+     onClick={() => navigate("/estudos_pag3")}
+     style={{
+       backgroundColor: "#7000b5",
+       color: "#fff",
+       padding: "10px 20px",
+       borderRadius: "8px",
+       border: "none",
+       cursor: "pointer",
+       fontSize: "16px"
+     }}
+   >
+     3
+   </button>
+ </Box>
+ 
+ </Box>
+
     </Box>
   );
 };
