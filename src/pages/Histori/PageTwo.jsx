@@ -69,21 +69,8 @@ const boxColor = theme.palette.mode === "dark" ? "#424242" : "white";
             style={{ color: "#0300b0", fontWeight: "bold", cursor: "pointer" }}
           >
             Edmund Halley
-          </span>{" "} observou, no ano de 1686, que o ar quente tende a subir, sendo esta uma observação 
-essencial para a compreensão dos padrões climáticos e meteorológicos. Em 1701, <span
-  onClick={() => toggleInfo("newton")}
-  style={{ color: "#0300b0", fontWeight: "bold", cursor: "pointer" }}
->
-  Isaac Newton
-</span>{" "} 
-introduziu a lei do arrefecimento, relacionando a taxa de perda de calor de um corpo com a 
-diferença de temperatura entre o corpo e o ambiente. Esses fenómenos foram analisados por 
-vários estudiosos ao longo dos anos, o que, futuramente, contribuiu para o conhecimento dos 
-processos de transferência de calor que temos hoje em dia, sendo os mais utilizados a 
-condução e a convecção.
-</Typography>
-
-        {showInfo === "halley" && (
+          </span>
+           {showInfo === "halley" && (
   <Fade in={true}>
     <Box
       ref={popupRef}
@@ -94,7 +81,7 @@ condução e a convecção.
         boxShadow: 3,
         borderRadius: 2,
         width: "60%",
-        maxWidth: "400px",
+        maxWidth: "450px",
         height: "250px",
         textAlign: "center",
         zIndex: 10,
@@ -124,6 +111,14 @@ condução e a convecção.
     </Box>
   </Fade>
 )}
+          {" "} observou, no ano de 1686, que o ar quente tende a subir, sendo esta uma observação 
+essencial para a compreensão dos padrões climáticos e meteorológicos. Em 1701, <span
+  onClick={() => toggleInfo("newton")}
+  style={{ color: "#0300b0", fontWeight: "bold", cursor: "pointer" }}
+>
+  Isaac Newton
+  
+</span>
 {showInfo === "newton" && (
   <Fade in={true}>
     <Box
@@ -135,7 +130,7 @@ condução e a convecção.
         boxShadow: 3,
         borderRadius: 2,
         width: "60%",
-        maxWidth: "400px",
+        maxWidth: "450px",
         textAlign: "center",
         zIndex: 10,
         left: "50%",
@@ -166,6 +161,16 @@ condução e a convecção.
   </Fade>
 )}
 
+
+{" "} 
+introduziu a lei do arrefecimento, relacionando a taxa de perda de calor de um corpo com a 
+diferença de temperatura entre o corpo e o ambiente. Esses fenómenos foram analisados por 
+vários estudiosos ao longo dos anos, o que, futuramente, contribuiu para o conhecimento dos 
+processos de transferência de calor que temos hoje em dia, sendo os mais utilizados a 
+condução e a convecção.
+</Typography>
+
+       
 
 
            <Typography
