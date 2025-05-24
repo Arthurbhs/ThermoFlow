@@ -10,6 +10,8 @@ import BubbleChart from "../Graphics/BubbleChart";
 import TemperatureInput from "../Inputs/Temperature";
 import InternalRayInput from "../Inputs/InternalRayInput";
 import ExternalRayInput from "../Inputs/ExternalRayInput";
+import Cicle from "../../assets/cicle.png"
+
 const SphericalHeatTransfer = () => {
   const theme = useTheme();
   const [layers, setLayers] = useState([{ k: "", r1: "", r2: "", material: "" }]);
@@ -175,7 +177,13 @@ const handleStateChange = (index, state) => {
        <TemperatureInput value={deltaT} onChange={(e) => handleNumericInput(e.target.value, setDeltaT)} />
       <Typography variant="h6" gutterBottom>Camadas</Typography>
       {layers.map((layer, index) => (
-        <Box key={index} sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
+               <Box key={index} sx={{ marginBottom: "15px", marginTop: "35px", textAlign: "center", flexGrow: 1  }}>
+      <Box
+      component="img"
+      src={Cicle}
+      alt={layer.material}
+      sx={{ width: 80, height: 80,  objectFit: "cover" }}
+    />  
           <InternalRayInput value={layer.r1} onChange={(e) => handleLayerChange(index, "r1", e.target.value)}/>
           <ExternalRayInput value={layer.r2} onChange={(e) => handleLayerChange(index, "r2", e.target.value)}/>
           <MaterialSelector materials={materials} selectedMaterial={layer.material} selectedState={layer.state} onMaterialChange={(value) => handleMaterialChange(index, value)} onStateChange={(value) => handleStateChange(index, value)}/>

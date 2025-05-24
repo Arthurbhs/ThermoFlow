@@ -40,7 +40,7 @@ const boxColor = theme.palette.mode === "dark" ? "#424242" : "white";
     setShowInfo((prev) => (prev === info ? null : info));
   };
   return (
-    <Box sx={{ margin: "-10px" }}>
+    <Box sx={{ }}>
       <Header />
        <Box sx={{ textAlign: "center", maxWidth: "80%", margin: "0 auto", padding: 4 }}>
 

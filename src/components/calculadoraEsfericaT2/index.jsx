@@ -12,6 +12,7 @@ import ExternalCoefficientInput from "../Inputs/ExternalConvectionCoefficient"
 import ExternalRayInput from "../Inputs/ExternalRayInput";
 import InternalRayInput from "../Inputs/InternalRayInput";
 import BubbleChart from "../Graphics/BubbleChart";
+import Cicle from "../../assets/cicle.png"
 
 const SphericalHeatTransfer = () => {
   const theme = useTheme();
@@ -178,8 +179,13 @@ const SphericalHeatTransfer = () => {
     <ExternalCoefficientInput value={hExt} onChange={(e) => handleNumericInput(e.target.value, setHExt)} />
   
     {layers.map((layer, index) => (
-      <Box key={index} sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
-        <ExternalRayInput value={layer.r1} onChange={(e) => handleLayerChange(index, "r1", e.target.value)}/>
+       <Box key={index} sx={{ marginBottom: "15px", marginTop: "35px", textAlign: "center", flexGrow: 1  }}>
+          <Box
+          component="img"
+          src={Cicle}
+          alt={layer.material}
+          sx={{ width: 80, height: 80, objectFit: "cover"}}
+        />   <ExternalRayInput value={layer.r1} onChange={(e) => handleLayerChange(index, "r1", e.target.value)}/>
         <InternalRayInput value={layer.r2} onChange={(e) => handleLayerChange(index, "r2", e.target.value)}/>
         
         {/* MaterialSelector para cada camada */}

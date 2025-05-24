@@ -10,6 +10,7 @@ import ThermalConductivityChart from "../Graphics/ThermalCondutivityChartPlane";
 import TemperatureInput from "../Inputs/Temperature";
 import AreaInput from "../Inputs/AreaInput";
 import ThicknessInput from "../Inputs/thicknessInput";
+import Squadre from "../../assets/squadre.png"
 
 const LOCAL_STORAGE_KEY = "condPlanHistory";
 
@@ -125,8 +126,13 @@ const HeatTransferCalculator = () => {
       <TemperatureInput value={deltaT} onChange={(e) => handleNumericInput(e.target.value, setDeltaT)} />
       <Typography variant="h6" gutterBottom>Camadas</Typography>
       {layers.map((layer, index) => (
-        <Box key={index} sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
-         <MaterialSelector
+       <Box key={index} sx={{ marginBottom: "15px", marginTop: "35px", textAlign: "center", flexGrow: 1  }}>
+      <Box
+      component="img"
+      src={Squadre}
+      alt={layer.material}
+      sx={{ width: 80, height: 80,  objectFit: "cover" }}
+    />     <MaterialSelector
   materials={materials}
   selectedMaterial={layer.material} // Certifique-se de passar a string correta
   selectedState={layer.state}

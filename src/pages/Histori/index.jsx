@@ -42,7 +42,7 @@ const boxColor = theme.palette.mode === "dark" ? "#424242" : "white";
     setShowInfo((prev) => (prev === info ? null : info));
   };
   return (
-    <Box sx={{ margin: "-10px" }}>
+    <Box sx={{  }}>
       <Header />
       <Box
         sx={{
@@ -69,10 +69,8 @@ const boxColor = theme.palette.mode === "dark" ? "#424242" : "white";
             src={Trasfer}
             alt="Exemplo"
             style={{
-              maxWidth: "100%",
-              height: "auto",
-              borderRadius: "8px",
-              width: "600px",
+                width: "100%", // Responsivo
+                maxWidth: "600px",
             }}
           />
         </Box>

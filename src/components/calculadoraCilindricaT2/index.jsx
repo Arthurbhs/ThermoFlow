@@ -1,11 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  Box,
-  Typography,
-  IconButton,
-  useTheme,
-  Button,
-} from "@mui/material";
+import {Box,Typography,IconButton,useTheme,Button} from "@mui/material";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import History from "./components/History";
 import ResultBox from "../resultBox";
@@ -20,6 +14,7 @@ import HExternalInput from "../Inputs/ExternalConvectionCoefficient";
 import ExternalRayInput from "../Inputs/ExternalRayInput";
 import InternalRayInput from "../Inputs/InternalRayInput";
 import CylinderLengthInput from "../Inputs/CylinderLengthInput";
+import Cilindric from "../../assets/cilindric.png"
 
 const CylindricalConvection = () => {
   const theme = useTheme();
@@ -257,7 +252,13 @@ const CylindricalConvection = () => {
       <HExternalInput value={hExternal} onChange={(e) => setHExternal(e.target.value)} />
 
       {layers.map((layer, index) => (
-        <Box key={index} sx={{ mb: 2 }}>
+          <Box key={index} sx={{ marginBottom: "15px", marginTop: "35px", textAlign: "center", flexGrow: 1  }}>
+      <Box
+      component="img"
+      src={Cilindric}
+      alt={layer.material}
+      sx={{ width: 80, height: 80, objectFit: "cover"}}
+    />
           <CylinderLengthInput value={layer.length} onChange={(e) => handleLayerChange(index, "length", e.target.value)} />
           <InternalRayInput value={layer.radius1} onChange={(e) => handleLayerChange(index, "radius1", e.target.value)} />
           <ExternalRayInput value={layer.radius2} onChange={(e) => handleLayerChange(index, "radius2", e.target.value)} />

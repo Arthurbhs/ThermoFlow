@@ -12,6 +12,7 @@ import CylinderLengthInput from "../Inputs/CylinderLengthInput";
 import InternalRayInput from "../Inputs/InternalRayInput";
 import ExternalRayInput from "../Inputs/ExternalRayInput";
 import BubbleChart from "../Graphics/BubbleChart";
+import Cilindric from "../../assets/cilindric.png"
 
 const CylindricalConduction = () => {
   const theme = useTheme();
@@ -214,7 +215,14 @@ const views = [
      
 
       {layers.map((layer, index) => (
-        <Box key={index} sx={{ marginBottom: "15px", textAlign: "center" }}>
+        
+        <Box key={index} sx={{ marginBottom: "15px", marginTop: "35px", textAlign: "center", flexGrow: 1  }}>
+      <Box
+      component="img"
+      src={Cilindric}
+      alt={layer.material}
+      sx={{ width: 80, height: 80, objectFit: "cover"}}
+    />
           <CylinderLengthInput value={layer.length} onChange={(e) => handleLayerChange(index, "length", e.target.value)}/>
             <InternalRayInput value={layer.radius1} onChange={(e) => handleLayerChange(index, "radius1", e.target.value)} />
             <ExternalRayInput value={layer.radius2} onChange={(e) => handleLayerChange(index, "radius2", e.target.value)} />
@@ -222,7 +230,6 @@ const views = [
  <IconButton onClick={() => removeLayer(index)}><RemoveCircleIcon /></IconButton>
         </Box>
       ))}
-
       <AddLayerButton onClick={addLayer} />
       <CalculateButton onClick={handleCalculate} isFormValid={isFormValid()} />
 

@@ -12,6 +12,7 @@ import HExternalInput from "../Inputs/ExternalConvectionCoefficient";
 import ThicknessInput from "../Inputs/thicknessInput";
 import ThermalConductivityChartPlane from "../Graphics/ThermalCondutivityChartPlane"
 import AreaInput from "../Inputs/AreaInput"
+import Squadre from "../../assets/squadre.png"
 
 const LOCAL_STORAGE_KEY = "heatTransferHistory";
 
@@ -168,8 +169,13 @@ const HeatTransferCalculator = () => {
 
       <Typography variant="h6" gutterBottom>Camadas</Typography>
       {layers.map((layer, index) => (
-        <Box key={index} sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
-          <MaterialSelector
+         <Box key={index} sx={{ marginBottom: "15px", marginTop: "35px", textAlign: "center", flexGrow: 1  }}>
+      <Box
+      component="img"
+      src={Squadre}
+      alt={layer.material}
+      sx={{ width: 80, height: 80, objectFit: "cover"}}
+    />   <MaterialSelector
             materials={materials}
             selectedMaterial={layer.material}
             selectedState={layer.state}
