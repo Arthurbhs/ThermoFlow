@@ -264,7 +264,9 @@ A condutibilidade térmica de um material é uma propriedade física desse mater
    <Box sx={{ textAlign: "center", padding: 4 }}>
  <Box sx={{ textAlign: "center", padding: 4, display: "flex", justifyContent: "center", gap: 2 }}>
    <button
-     onClick={() => navigate("/estudos_pag1")}
+     onClick={() => {navigate("/estudos_pag1");
+      window.scrollTo(0, 0)
+     }}
      style={{
        backgroundColor: "#7000b5",
        color: "#fff",
@@ -279,7 +281,9 @@ A condutibilidade térmica de um material é uma propriedade física desse mater
    </button>
  
    <button
-     onClick={() => navigate("/estudos_pag2")}
+     onClick={() => {navigate("/estudos_pag2")
+      window.scrollTo(0, 0)}
+     }
      style={{
        backgroundColor: "#7000b5",
        color: "#fff",
@@ -294,7 +298,9 @@ A condutibilidade térmica de um material é uma propriedade física desse mater
    </button>
  
    <button
-     onClick={() => navigate("/estudos_pag3")}
+     onClick={() => {navigate("/estudos_pag3")
+      window.scrollTo(0, 0)}
+     }
      style={{
        backgroundColor: "#7000b5",
        color: "#fff",
