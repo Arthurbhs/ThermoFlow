@@ -17,6 +17,8 @@ import ExternalRayInput from "../Inputs/ExternalRayInput";
 import InternalRayInput from "../Inputs/InternalRayInput";
 import BubbleChart from "../Graphics/BubbleChart";
 import Cicle from "../../assets/cicle.png"
+import SlideTutorial from "../TutorialSlider"
+
 
 const SphericalHeatTransfer = () => {
   const theme = useTheme();
@@ -248,6 +250,7 @@ const saveToFirestoreHistory = async (user, entry) => {
   return (
     <Box sx={{ maxWidth: 600, margin: "50px auto", padding: "30px", borderRadius: "16px", backgroundColor: theme.palette.background.paper }}>
     <Typography variant="h4">Convecção em estruturas esféricas</Typography>
+     <SlideTutorial/>
     <Box
           component="img"
           src={Cicle}

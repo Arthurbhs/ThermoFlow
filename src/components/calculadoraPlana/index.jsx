@@ -12,6 +12,8 @@ import { useAuth } from "../../AuthContext";
 import ThermalConductivityChart from "../Graphics/ThermalCondutivityChartPlane";
 import CalculatorInput from "../Inputs/CalculatorInput";
 import Squadre from "../../assets/squadre.png";
+import SlideTutorial from "../TutorialSlider"
+
 
 const HeatTransferCalculator = () => {
   const theme = useTheme();
@@ -151,6 +153,7 @@ console.log("chartData", chartData.map(({ material, length, area, thermalConduct
   return (
     <Box sx={{ maxWidth: 600, margin: "50px auto", padding: "30px", borderRadius: "16px", boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)", backgroundColor: theme.palette.background.paper, textAlign: "center" }}>
       <Typography variant="h4" gutterBottom>Condução em estruturas quadradas</Typography>
+       {user && <SlideTutorial user={user} />}
 
       <Box component="img" src={Squadre} sx={{ width: 80, height: 80, objectFit: "cover" }} />
       <CalculatorInput label="Diferença de Temperatura (ΔT em K)" value={deltaT} onChange={(e) => handleNumericInput(e.target.value, setDeltaT)} 

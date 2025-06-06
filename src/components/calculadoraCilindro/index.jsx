@@ -6,13 +6,7 @@ import MaterialSelector from "../materialSelector";
 import ResultBox from "../resultBox";
 import CalculateButton from "../calculateButton";
 import AddLayerButton from "../addLayerButton";
-import {
-  collection,
-  getDocs,
-  query,
-  where,
-  addDoc,
-  serverTimestamp,
+import {collection,getDocs,query,where,addDoc,serverTimestamp,
 } from "firebase/firestore";
 import { db } from "../../firebase";
 import { useAuth } from "../../AuthContext";
@@ -23,6 +17,7 @@ import InternalRayInput from "../Inputs/InternalRayInput";
 import ExternalRayInput from "../Inputs/ExternalRayInput";
 import BubbleChart from "../Graphics/BubbleChart";
 import Cilindric from "../../assets/cilindric.png";
+import SlideTutorial from "../TutorialSlider"
 
 const CylindricalConduction = () => {
   const theme = useTheme();
@@ -201,7 +196,7 @@ const CylindricalConduction = () => {
       <Typography variant="h4" gutterBottom>
         Condução em estruturas Cilindricas
       </Typography>
-
+ <SlideTutorial/>
       <Box component="img" src={Cilindric} sx={{ width: 80, height: 80 }} />
 
       <TemperatureInput value={deltaT} onChange={(e) => setDeltaT(e.target.value)} />

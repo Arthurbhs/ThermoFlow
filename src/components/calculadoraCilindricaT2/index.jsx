@@ -18,7 +18,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../../firebase";
 import { useAuth } from "../../AuthContext";
-
+import SlideTutorial from "../TutorialSlider"
 import TemperatureInput from "../Inputs/Temperature";
 import HInternalInput from "../Inputs/InternalConvectionCoefficient";
 import HExternalInput from "../Inputs/ExternalConvectionCoefficient";
@@ -253,6 +253,7 @@ const CylindricalConvection = () => {
       <Typography variant="h4" gutterBottom>
         Convecção em estruturas Cilindricas
       </Typography>
+       <SlideTutorial/>
       <Box component="img" src={Cilindric} sx={{ width: 80, height: 80 }} />
 
       <TemperatureInput value={deltaT} onChange={(e) => setDeltaT(e.target.value)} />

@@ -9,9 +9,9 @@ import AddLayerButton from "../addLayerButton";
 import { collection, getDocs, query, where, addDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 import { useAuth } from "../../AuthContext";
-import HInternalInput from "../Inputs/InternalConvectionCoefficient";
-import HExternalInput from "../Inputs/ExternalConvectionCoefficient";
+import TurorialLabel from "../TutorialLabel"
 import CalculatorInput from "../Inputs/CalculatorInput";
+import SlideTutorial from "../TutorialSlider"
 
 import ThermalConductivityChartPlane from "../Graphics/ThermalCondutivityChartPlane";
 import Squadre from "../../assets/squadre.png";
@@ -193,6 +193,7 @@ if (!isNaN(hExt) && hExt > 0) total += 1 / (hExt * area);
       textAlign: "center"
     }}>
       <Typography variant="h4" gutterBottom>Convecção em estruturas quadradas</Typography>
+        {user && <SlideTutorial user={user} />}
 
       <Box component="img" src={Squadre} sx={{ width: 80, height: 80 }} />
 

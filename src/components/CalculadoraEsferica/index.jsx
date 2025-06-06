@@ -21,6 +21,8 @@ import TemperatureInput from "../Inputs/Temperature";
 import InternalRayInput from "../Inputs/InternalRayInput";
 import ExternalRayInput from "../Inputs/ExternalRayInput";
 import Cicle from "../../assets/cicle.png";
+import SlideTutorial from "../TutorialSlider"
+
 
 const SphericalHeatTransfer = () => {
   const theme = useTheme();
@@ -202,6 +204,7 @@ const SphericalHeatTransfer = () => {
       <Typography variant="h4" gutterBottom>
         Condução em Estruturas Esféricas
       </Typography>
+       <SlideTutorial/>
       <Box component="img" src={Cicle} sx={{ width: 80, height: 80 }} />
 
       <TemperatureInput
