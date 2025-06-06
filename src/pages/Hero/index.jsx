@@ -3,17 +3,10 @@ import { Box, Typography, Button, keyframes } from "@mui/material";
 import { styled } from "@mui/system";
 import { useNavigate } from "react-router-dom";
 import { ThemeContext } from "../../context/ThemeContext";
-import {
-  Functions,
-  Calculate,
-  Percent,
-  AddCircle,
-  RemoveCircle,
-  Done,
-  Repeat,
-  Star,
-} from "@mui/icons-material";
 import "@fontsource/poppins";
+import BackgroundAnimation from "../../components/Animation";
+import { useAuth } from "../../AuthContext";
+
 
 
 const StyledBox = styled(Box)({
@@ -41,16 +34,7 @@ const StyledButton = styled(Button)({
   },
 });
 
-const fallAnimation = keyframes`
-  0% {
-    transform: translateY(-80px); 
-  }
-  100% {
-    transform: translateY(107vh); 
-  }
-`;
 
-const ICONS = [Functions, Calculate, Percent, AddCircle, RemoveCircle, Done, Repeat, Star];
 
 const WelcomePage = () => {
   const { darkMode } = useContext(ThemeContext);
@@ -58,6 +42,8 @@ const WelcomePage = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [firstTime, setFirstTime] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
+
 
   useEffect(() => {
     localStorage.removeItem("lastPopupDate"); // Apaga o registro
@@ -92,27 +78,10 @@ const WelcomePage = () => {
     }
   }, []);
 
-  const addIcon = () => {
-    const IconComponent = ICONS[Math.floor(Math.random() * ICONS.length)];
-    const icon = {
-      id: Date.now(),
-      positionX: Math.random() * window.innerWidth,
-      IconComponent,
-    };
-    setIcons((prevIcons) => [...prevIcons, icon]);
-
-    setTimeout(() => {
-      setIcons((prevIcons) => prevIcons.filter((i) => i.id !== icon.id));
-    }, 4800);
-  };
-
-  useEffect(() => {
-    const interval = setInterval(addIcon, 300);
-    return () => clearInterval(interval);
-  }, []);
 
   return (
     <StyledBox>
+      <BackgroundAnimation/>
       <Typography
         variant="h2"
         sx={{
@@ -137,32 +106,44 @@ const WelcomePage = () => {
         Calculadora coeficiente de transferência de calor
       </Typography>
 
-      {icons.map(({ id, positionX, IconComponent }) => (
-        <Box
-          key={id}
-          sx={{
-            position: "absolute",
-            left: positionX,
-            top: 0,
-            animation: `${fallAnimation} 5s linear`,
-            color: "#e89be3",
-            fontSize: 30,
-            zIndex: 1,
-          }}
-        >
-          <IconComponent />
-        </Box>
-      ))}
+   
+   {firstTime ? (
+  <StyledButton variant="contained" onClick={() => setShowPopup(true)}>
+    Começar
+  </StyledButton>
+) : (
+  <>
+    <StyledButton
+      variant="contained"
+      onClick={() => {
+        if (user?.uid) {
+          navigate("/Calculadora"); // Redireciona para a home se já está logado
+        } else {
+          navigate("/Login"); // Vai para a página de login se não está logado
+        }
+      }}
+    >
+      Entrar
+    </StyledButton>
 
-      {firstTime ? (
-        <StyledButton variant="contained" onClick={() => setShowPopup(true)}>
-          Começar
-        </StyledButton>
-      ) : (
-        <StyledButton variant="contained" onClick={() => navigate("/Calculadora")}>
-          Entrar
-        </StyledButton>
-      )}
+    <Typography
+      variant="body2"
+      sx={{
+        marginTop: "10px",
+        color: "#7000b5",
+        cursor: "pointer",
+        textDecoration: "underline",
+        "&:hover": {
+          color: "#d890d3",
+        },
+      }}
+      onClick={() => navigate("/Calculadora")}
+    >
+      Entrar como anônimo
+    </Typography>
+  </>
+)}
+
 
       {showPopup && (
       <Box

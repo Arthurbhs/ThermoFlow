@@ -2,7 +2,7 @@ import React, {useState} from "react";
 import { TextField, InputAdornment, IconButton, Popover, Typography } from "@mui/material";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 
-const ExternalRayInput = ({ value, onChange }) => {
+const InternalRayInput = ({ value, onChange }) => {
 
 const [anchorEl, setAnchorEl] = useState(null);
      
@@ -55,4 +55,4 @@ const [anchorEl, setAnchorEl] = useState(null);
        );
      };
 
-export default ExternalRayInput;
+export default InternalRayInput;

@@ -6,48 +6,87 @@ import MaterialSelector from "../materialSelector";
 import ResultBox from "../resultBox";
 import CalculateButton from "../calculateButton";
 import AddLayerButton from "../addLayerButton";
-import TemperatureInput from "../Inputs/Temperature";
+import { collection, getDocs, query, where, addDoc } from "firebase/firestore";
+import { db } from "../../firebase";
+import { useAuth } from "../../AuthContext";
 import HInternalInput from "../Inputs/InternalConvectionCoefficient";
 import HExternalInput from "../Inputs/ExternalConvectionCoefficient";
-import ThicknessInput from "../Inputs/thicknessInput";
-import ThermalConductivityChartPlane from "../Graphics/ThermalCondutivityChartPlane"
-import AreaInput from "../Inputs/AreaInput"
-import Squadre from "../../assets/squadre.png"
+import CalculatorInput from "../Inputs/CalculatorInput";
 
-const LOCAL_STORAGE_KEY = "heatTransferHistory";
-
-
+import ThermalConductivityChartPlane from "../Graphics/ThermalCondutivityChartPlane";
+import Squadre from "../../assets/squadre.png";
 
 const HeatTransferCalculator = () => {
   const theme = useTheme();
-  const [layers, setLayers] = useState([{ h: "", a: 1, material: "", state: "seco" }]);
+  const { user } = useAuth();
+
   const [deltaT, setDeltaT] = useState("");
-  const [area, setArea] = useState(1);
   const [hInternal, setHInternal] = useState("");
   const [hExternal, setHExternal] = useState("");
+
+  const [layers, setLayers] = useState([{ h: "1", a: "1", material: "", state: "seco" }]);
   const [totalResistance, setTotalResistance] = useState(0);
   const [heatFlux, setHeatFlux] = useState("0.00");
   const [history, setHistory] = useState([]);
   const [materials, setMaterials] = useState([]);
   const [viewMode, setViewMode] = useState("resultado");
 
-  useEffect(() => {
-    fetch("https://minha-api-workers.apimateriallistcalculator.workers.dev/src/index")
-      .then(response => response.json())
-      .then(data => setMaterials(data))
-      .catch(error => console.error("Erro ao carregar materiais:", error));
-  }, []);
-
-  useEffect(() => {
-    const rawData = localStorage.getItem(LOCAL_STORAGE_KEY);
+  // 🔥 Salvar entrada no Firestore
+  const saveToFirestoreHistory = async (entry) => {
+    if (!user) return;
     try {
-      const savedHistory = JSON.parse(rawData) || [];
-      setHistory(savedHistory);
+      await addDoc(collection(db, "history"), {
+        userId: user.uid,
+        calculatorType: "convection_planar",
+        ...entry,
+        timestamp: new Date().toISOString(),
+      });
     } catch (error) {
-      console.error("Erro ao fazer parse do localStorage:", error);
-      setHistory([]);
+      console.error("Erro ao salvar no Firestore:", error);
     }
-  }, []);
+  };
+
+  // 🔄 Buscar histórico do Firestore
+  useEffect(() => {
+    const fetchHistory = async () => {
+      if (!user) return;
+      try {
+        const historyRef = collection(db, "history");
+        const q = query(historyRef, where("userId", "==", user.uid), where("calculatorType", "==", "convection_planar"));
+        const querySnapshot = await getDocs(q);
+        const userHistory = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setHistory(userHistory);
+      } catch (error) {
+        console.error("Erro ao buscar histórico:", error);
+      }
+    };
+    fetchHistory();
+  }, [user]);
+
+  // 🔄 Buscar materiais da API + Firestore
+  useEffect(() => {
+    const fetchMaterials = async () => {
+      try {
+        const response = await fetch("https://minha-api-workers.apimateriallistcalculator.workers.dev/src/index");
+        const apiMaterials = await response.json();
+
+        const materialsRef = collection(db, "user_materials");
+        const q = query(materialsRef, where("userId", "==", user?.uid));
+        const querySnapshot = await getDocs(q);
+        const userMaterials = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        setMaterials([...apiMaterials, ...userMaterials]);
+      } catch (error) {
+        console.error("Erro ao carregar materiais:", error);
+        alert("Erro ao carregar materiais. Verifique sua conexão ou permissões.");
+      }
+    };
+
+    if (user) fetchMaterials();
+  }, [user]);
 
   useEffect(() => {
     if (totalResistance > 0) {
@@ -62,8 +101,8 @@ const HeatTransferCalculator = () => {
   }, [heatFlux]);
 
   const handleNumericInput = (value, setter) => {
-    const sanitizedValue = value.replace(/[^0-9.]/g, "").replace(/^([0-9]*\.?[0-9]*).*$/, "$1");
-    setter(sanitizedValue);
+    const sanitized = value.replace(/[^0-9.]/g, "").replace(/^([0-9]*\.?[0-9]*).*$/, "$1");
+    setter(sanitized);
   };
 
   const handleLayerChange = (index, key, value) => {
@@ -73,50 +112,34 @@ const HeatTransferCalculator = () => {
   const calculateResistance = () => {
     let total = 0;
 
-    layers.forEach(({ h, a, material, state }) => {
-      const selectedMaterial = materials.find(m => m.name === material);
-      if (!selectedMaterial) return;
+   layers.forEach(({ h, a, material, state }) => {
+  const selectedMaterial = materials.find(m => m.name === material);
+  if (!selectedMaterial) return;
 
-      const thermalConductivity =
-        state === "seco"
-          ? selectedMaterial.thermalConductivityDry
-          : selectedMaterial.thermalConductivityWet;
+  const thermalConductivity = state === "seco"
+    ? selectedMaterial.thermalConductivityDry || selectedMaterial.conductivityDry
+    : selectedMaterial.thermalConductivityWet || selectedMaterial.conductivityWet;
 
-          const thickness = parseFloat(h);
-          const areaValue = parseFloat(a || area);
-          
+  const thickness = parseFloat(h);
+  const areaValue = parseFloat(a); // ✅ Correção aqui
 
-      if (!isNaN(thickness) && !isNaN(areaValue) && thermalConductivity > 0) {
-        total += thickness / (thermalConductivity * areaValue);
-      }
-    });
+  if (!isNaN(thickness) && !isNaN(areaValue) && thermalConductivity > 0) {
+    total += thickness / (thermalConductivity * areaValue);
+  }
+});
+
 
     const hInt = parseFloat(hInternal);
     const hExt = parseFloat(hExternal);
+const area = parseFloat(layers[0]?.a || "1"); // fallback para 1 se vazio
 
-    if (hInt > 0) total += 1 / (hInt * area);
-    if (hExt > 0) total += 1 / (hExt * area);
+if (!isNaN(hInt) && hInt > 0) total += 1 / (hInt * area);
+if (!isNaN(hExt) && hExt > 0) total += 1 / (hExt * area);
+
+
 
     setTotalResistance(total);
   };
-
-  const chartData = layers.map((layer, index) => {
-    const selectedMaterial = materials.find(m => m.name === layer.material);
-    if (!selectedMaterial) return null;
-  
-    const thermalConductivity =
-      layer.state === "seco"
-        ? selectedMaterial.thermalConductivityDry
-        : selectedMaterial.thermalConductivityWet;
-  
-    return {
-      material: layer.material,
-      thermalConductivity,
-      length: parseFloat(layer.h) || 0,  // <- comprimento da camada
-    };
-  }).filter(Boolean); // filtra nulos
-  
-  console.log("chartData:", chartData);
 
   const calculateHeatFlux = () => {
     const deltaTValue = parseFloat(deltaT);
@@ -126,20 +149,16 @@ const HeatTransferCalculator = () => {
   const saveToHistory = () => {
     const newEntry = {
       deltaT,
-      area,
       hInternal,
       hExternal,
       layers,
       totalResistance,
       heatFlux,
-      timestamp: new Date().toLocaleString()
     };
-    const updatedHistory = [newEntry, ...history.slice(0, 2)];
-    setHistory(updatedHistory);
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedHistory));
+    saveToFirestoreHistory(newEntry);
   };
-  
-  const addLayer = () => setLayers([...layers, { h: "", a: area, material: "", state: "seco" }]);
+
+  const addLayer = () => setLayers([...layers, { h: "", a: "", material: "", state: "seco" }]);
   const removeLayer = (index) => layers.length > 1 && setLayers(layers.filter((_, i) => i !== index));
 
   const isFormValid = () =>
@@ -148,6 +167,20 @@ const HeatTransferCalculator = () => {
     layers.every(layer => layer.h && layer.a && layer.material) &&
     hInternal &&
     hExternal;
+
+  const chartData = layers.map((layer) => {
+  const selectedMaterial = materials.find(m => m.name === layer.material);
+  const thermalConductivity = selectedMaterial
+    ? (layer.state === "seco" ? selectedMaterial.thermalConductivityDry : selectedMaterial.thermalConductivityWet)
+    : null;
+
+  return thermalConductivity ? {
+    material: layer.material,
+    thermalConductivity,
+    length: parseFloat(layer.h) || 0,
+    area: parseFloat(layer.a) || 0
+  } : null;
+}).filter(Boolean);
 
   return (
     <Box sx={{
@@ -159,33 +192,36 @@ const HeatTransferCalculator = () => {
       backgroundColor: theme.palette.background.paper,
       textAlign: "center"
     }}>
-      <Typography variant="h4" gutterBottom>
-        Convecção com Múltiplas Camadas
-      </Typography>
+      <Typography variant="h4" gutterBottom>Convecção em estruturas quadradas</Typography>
 
-      <TemperatureInput value={deltaT} onChange={(e) => handleNumericInput(e.target.value, setDeltaT)} />
-      <HInternalInput value={hInternal} onChange={(e) => handleNumericInput(e.target.value, setHInternal)} />
-      <HExternalInput value={hExternal} onChange={(e) => handleNumericInput(e.target.value, setHExternal)} />
+      <Box component="img" src={Squadre} sx={{ width: 80, height: 80 }} />
+
+     <CalculatorInput label="Diferença de Temperatura (ΔT em K)" value={deltaT} onChange={(e) => handleNumericInput(e.target.value, setDeltaT)} 
+            description=" Diferença entre as temperaturas entre o objeto a outro, ou o objeto e o ambiente que impulsiona a troca de calor "/>
+      <CalculatorInput label="Coeficiente de Convecção Interno (W/m².K)" value={hInternal} onChange={(e) => handleNumericInput(e.target.value, setHInternal)} 
+      description="  Mede a troca de calor na superfície interna com o fluido interno. Varia com o tipo de fluido e fluxo. (W/m²·K)"  
+            />
+      <CalculatorInput label="Coeficiente de Convecção Externo (W/m².K)" value={hExternal} onChange={(e) => handleNumericInput(e.target.value, setHExternal)} 
+      description="    Mede a troca de calor entre a superfície externa e o ar. Varia com o vento e a temperatura. (W/m²·K)"/>
 
       <Typography variant="h6" gutterBottom>Camadas</Typography>
+
       {layers.map((layer, index) => (
-         <Box key={index} sx={{ marginBottom: "15px", marginTop: "35px", textAlign: "center", flexGrow: 1  }}>
-      <Box
-      component="img"
-      src={Squadre}
-      alt={layer.material}
-      sx={{ width: 80, height: 80, objectFit: "cover"}}
-    />   <MaterialSelector
+        <Box key={index} sx={{ marginBottom: "15px", marginTop: "35px", textAlign: "center", flexGrow: 1 }}>
+          <MaterialSelector
             materials={materials}
             selectedMaterial={layer.material}
             selectedState={layer.state}
             onMaterialChange={(value) => handleLayerChange(index, "material", value)}
             onStateChange={(value) => handleLayerChange(index, "state", value)}
           />
-          <AreaInput value={area} onChange={(e) => handleNumericInput(e.target.value, setArea)} />
-
-          <ThicknessInput value={layer.h} onChange={(e) => handleNumericInput(e.target.value, (val) => handleLayerChange(index, "h", val))} />
-          <IconButton onClick={() => removeLayer(index)} sx={{ color: "#9b00d9" }}>
+          <CalculatorInput label="Área (M²)"   value={layer.a} onChange={(e) => handleNumericInput(e.target.value, (val) => handleLayerChange(index, "a", val))}
+          description=" A área corresponde à superfície da parede onde ocorre a troca de calor. Insira o valor em metros quadrados."/>
+                
+                   
+         <CalculatorInput label="Espessura (M)" value={layer.h} onChange={(e) => handleNumericInput(e.target.value, (val) => handleLayerChange(index, "h", val))}
+                  description="   refere-se à distância entre duas superfícies opostas de um objeto ou material, em metros."/>
+             <IconButton onClick={() => removeLayer(index)} sx={{ color: "#9b00d9" }}>
             <RemoveCircleIcon />
           </IconButton>
         </Box>
@@ -194,7 +230,6 @@ const HeatTransferCalculator = () => {
       <AddLayerButton onClick={addLayer} />
       <CalculateButton onClick={calculateResistance} isFormValid={isFormValid()} />
 
-      {/* Botões de visualização */}
       <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mt: 2 }}>
         <Button
           variant={viewMode === "resultado" ? "contained" : "outlined"}
@@ -215,9 +250,7 @@ const HeatTransferCalculator = () => {
       {viewMode === "resultado" ? (
         <ResultBox totalResistance={totalResistance} heatFlux={heatFlux} />
       ) : (
-        <ThermalConductivityChartPlane
-          selectedMaterials={chartData}
-        />
+        <ThermalConductivityChartPlane selectedMaterials={chartData} />
       )}
 
       <History historyData={history} />

@@ -4,28 +4,54 @@ import { Box, Grid, Typography, CircularProgress } from "@mui/material";
 import Header from "../../components/Header"
 import MaterialsButton from "../../components/MaterialButton";
 import MaterialDisplay from "../../components/MaterialShow";
+import CreateMaterialModal from '../../components/MaterialCreate';
+
+import { useAuth } from '../../AuthContext';
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db } from "../../firebase"; 
+
+
 
 const MaterialSelectionPage = () => {
   const [materials, setMaterials] = useState([]);
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [openCreateModal, setOpenCreateModal] = useState(false);
 
-  useEffect(() => {
-    const fetchMaterials = async () => {
-      try {
-        const res = await fetch("https://minha-api-workers.apimateriallistcalculator.workers.dev/src/index");
-        const data = await res.json();
-        setMaterials(data);
-        setSelected(data[0]); // seleciona o primeiro por padrão
-        setLoading(false);
-      } catch (err) {
-        console.error("Erro ao buscar materiais:", err);
-        setLoading(false);
+const { user } = useAuth();
+
+ useEffect(() => {
+  const fetchMaterials = async () => {
+    try {
+      const res = await fetch("https://minha-api-workers.apimateriallistcalculator.workers.dev/src/index");
+      const data = await res.json();
+
+      let userMaterials = [];
+     if (user?.uid) {
+  const q = query(
+    collection(db, "user_materials"),
+    where("userId", "==", user.uid)
+  );
+
+
+        const querySnapshot = await getDocs(q);
+        userMaterials = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       }
-    };
 
-    fetchMaterials();
-  }, []);
+      const allMaterials = [...data, ...userMaterials];
+
+      setMaterials(allMaterials);
+      setSelected(allMaterials[0]);
+      setLoading(false);
+    } catch (err) {
+      console.error("Erro ao buscar materiais:", err);
+      setLoading(false);
+    }
+  };
+
+  fetchMaterials();
+}, [user]);
+
 
   if (loading) {
     return (
@@ -36,6 +62,9 @@ const MaterialSelectionPage = () => {
       </Box>
     );
   }
+  const handleDeleteMaterial = (id) => {
+  setMaterials((prev) => prev.filter((material) => material.id !== id));
+};
 
   return (
 <Box>          
@@ -88,13 +117,36 @@ const MaterialSelectionPage = () => {
             material={mat}
             onSelect={setSelected}
             isSelected={mat.id === selected?.id}
+             onDelete={handleDeleteMaterial}
           />
         </Grid>
       ))}
+      {user?.uid && (
+  <Grid item xs={6} sm={3} md={2.4}>
+    <MaterialsButton
+      onDelete={handleDeleteMaterial}
+      material={{
+        name: "Criar",
+        thumbnail: "https://img.icons8.com/ios-filled/100/plus-math.png",
+      }}
+      onSelect={() => setOpenCreateModal(true)}
+      isSelected={false}
+    />
+  </Grid>
+)}
+
+
     </Grid>
   </Box>
 </Box>
-
+<CreateMaterialModal
+  open={openCreateModal}
+  onClose={() => setOpenCreateModal(false)}
+  onMaterialCreated={(newMaterial) => {
+    setMaterials(prev => [...prev, newMaterial]);
+    setSelected(newMaterial);
+  }}
+/>
 </Box>
 
 </Box>

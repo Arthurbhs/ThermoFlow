@@ -7,6 +7,8 @@ import AboutThree from "./pages/Histori/PageThree"
 import Calculadora from "./pages/Calculadora";
 import Materials from "./pages/Materials"
 import ThemeProviderComponent from "./context/ThemeContext"; // Importe o ThemeProvider
+import Login from "./pages/Login"
+import Register from "./pages/Register"
 
 
 const App = () => {
@@ -21,6 +23,9 @@ const App = () => {
            <Route path="/estudos_pag2" element={<AboutTwo />} />
           <Route path="/estudos_pag3" element={<AboutThree />} />
           <Route path="/Materiais" element={<Materials />} />
+           <Route path="/Login" element={<Login />} />
+            <Route path="/Register" element={<Register/>} />
+
         </Routes>
       </Router>
     </ThemeProviderComponent>

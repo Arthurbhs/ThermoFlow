@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {Box,Typography,IconButton,useTheme,Button} from "@mui/material";
+import { Box, Typography, IconButton, useTheme, Button } from "@mui/material";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import History from "./components/History";
 import ResultBox from "../resultBox";
@@ -8,18 +8,30 @@ import ThermalConductivityChart from "../Graphics/ThermalConductivityChart";
 import CalculateButton from "../calculateButton";
 import AddLayerButton from "../addLayerButton";
 import MaterialSelector from "../materialSelector";
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+  addDoc,
+  serverTimestamp,
+} from "firebase/firestore";
+import { db } from "../../firebase";
+import { useAuth } from "../../AuthContext";
+
 import TemperatureInput from "../Inputs/Temperature";
 import HInternalInput from "../Inputs/InternalConvectionCoefficient";
 import HExternalInput from "../Inputs/ExternalConvectionCoefficient";
 import ExternalRayInput from "../Inputs/ExternalRayInput";
 import InternalRayInput from "../Inputs/InternalRayInput";
 import CylinderLengthInput from "../Inputs/CylinderLengthInput";
-import Cilindric from "../../assets/cilindric.png"
+
+import Cilindric from "../../assets/cilindric.png";
 
 const CylindricalConvection = () => {
   const theme = useTheme();
+  const { user } = useAuth();
 
-  // Estados principais
   const [deltaT, setDeltaT] = useState("");
   const [hInternal, setHInternal] = useState("");
   const [hExternal, setHExternal] = useState("");
@@ -29,38 +41,34 @@ const CylindricalConvection = () => {
   const [materials, setMaterials] = useState([]);
   const [totalResistance, setTotalResistance] = useState(0);
   const [heatFlux, setHeatFlux] = useState(0);
-  const [history, setHistory] = useState([]);
   const [activeView, setActiveView] = useState("result");
 
-  const LOCAL_STORAGE_KEY = "convCilHistory";
-
-  // Carregar materiais
+  // 🔥 Carregar materiais da API + Firestore
   useEffect(() => {
-    fetch("https://minha-api-workers.apimateriallistcalculator.workers.dev/src/index")
-      .then((response) => response.json())
-      .then((data) => setMaterials(data))
-      .catch((error) =>
-        console.error("Erro ao carregar materiais:", error)
-      );
-  }, []);
+    const fetchMaterials = async () => {
+      try {
+        const response = await fetch(
+          "https://minha-api-workers.apimateriallistcalculator.workers.dev/src/index"
+        );
+        const apiMaterials = await response.json();
 
-  // Carregar histórico
-  useEffect(() => {
-    const rawData = localStorage.getItem(LOCAL_STORAGE_KEY);
-    try {
-      const savedHistory = JSON.parse(rawData) || [];
-      setHistory(savedHistory);
-    } catch (error) {
-      console.error("Erro ao fazer parse do localStorage:", error);
-    }
-  }, []);
+        const materialsRef = collection(db, "user_materials");
+        const q = query(materialsRef, where("userId", "==", user?.uid));
 
-  // Salvar novo cálculo
-  useEffect(() => {
-    if (totalResistance > 0) {
-      saveToHistory(totalResistance);
-    }
-  }, [totalResistance]);
+        const querySnapshot = await getDocs(q);
+        const userMaterials = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        setMaterials([...apiMaterials, ...userMaterials]);
+      } catch (error) {
+        console.error("Erro ao carregar materiais:", error);
+      }
+    };
+
+    if (user) fetchMaterials();
+  }, [user]);
 
   const handleLayerChange = (index, field, value) => {
     if (/^-?\d*\.?\d*$/.test(value)) {
@@ -108,17 +116,14 @@ const CylindricalConvection = () => {
   };
 
   const chartData = layers
-  .map(layer => ({
-    material: layer.material || "Desconhecido",
-    k: parseFloat(layer.k) || 0,
-    length: parseFloat(layer.length) || 0,
-    r1: parseFloat(layer.radius1) || 0,
-    r2: parseFloat(layer.radius2) || 0,
-  }))
-  .filter(layer => layer.material);
-
-  
-  
+    .map((layer) => ({
+      material: layer.material || "Desconhecido",
+      k: parseFloat(layer.k) || 0,
+      length: parseFloat(layer.length) || 0,
+      r1: parseFloat(layer.radius1) || 0,
+      r2: parseFloat(layer.radius2) || 0,
+    }))
+    .filter((layer) => layer.material);
 
   const isFormValid = () => {
     if (!deltaT || !hInternal || !hExternal) return false;
@@ -143,7 +148,7 @@ const CylindricalConvection = () => {
     setLayers((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleCalculate = () => {
+  const handleCalculate = async () => {
     let totalRes = 0;
     let valid = true;
 
@@ -190,18 +195,24 @@ const CylindricalConvection = () => {
 
     const parsedDeltaT = parseFloat(deltaT);
     if (!isNaN(parsedDeltaT)) {
+      const heat = (parsedDeltaT / totalRes).toFixed(2);
       setTotalResistance(totalRes);
-      setHeatFlux((parsedDeltaT / totalRes).toFixed(2));
+      setHeatFlux(heat);
+      await saveToFirestore(totalRes, heat);
     }
   };
 
-  const saveToHistory = (totalRes) => {
+  const saveToFirestore = async (totalRes, heat) => {
+    if (!user) return;
+
     const newEntry = {
+      userId: user.uid,
+      calculatorType: "convection_cylindrical", // 🔥 Tipo da calculadora
       deltaT,
       hInternal,
       hExternal,
       totalResistance: Number(totalRes).toFixed(6),
-      heatFlux: (parseFloat(deltaT) / totalRes).toFixed(2),
+      heatFlux: heat,
       layers: layers.map((layer) => ({
         material: layer.material || "Desconhecido",
         state: layer.state || "seco",
@@ -210,25 +221,21 @@ const CylindricalConvection = () => {
         radius1: layer.radius1 || "0",
         radius2: layer.radius2 || "0",
       })),
-      timestamp: new Date().toLocaleString(),
+      timestamp: serverTimestamp(),
     };
-  
-    let storedHistory = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) || [];
-    storedHistory.unshift(newEntry);
-  
-    if (storedHistory.length > 10) {
-      storedHistory = storedHistory.slice(0, 10);
+
+    try {
+      await addDoc(collection(db, "history"), newEntry);
+      console.log("Salvo no Firestore.");
+    } catch (error) {
+      console.error("Erro ao salvar no Firestore:", error);
     }
-  
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(storedHistory));
-    setHistory([...storedHistory]);
   };
-  
 
   const views = [
     { key: "result", label: "Resultado" },
-    { key: "chart", label: "Raio" },
-    { key: "bubble", label: "Condutividade" },
+    { key: "chart", label: "Condutividade" },
+    { key: "ChatRay", label: "Raio" },
   ];
 
   return (
@@ -244,24 +251,34 @@ const CylindricalConvection = () => {
       }}
     >
       <Typography variant="h4" gutterBottom>
-        Convecção em Cilindros
+        Convecção em estruturas Cilindricas
       </Typography>
+      <Box component="img" src={Cilindric} sx={{ width: 80, height: 80 }} />
 
       <TemperatureInput value={deltaT} onChange={(e) => setDeltaT(e.target.value)} />
       <HInternalInput value={hInternal} onChange={(e) => setHInternal(e.target.value)} />
       <HExternalInput value={hExternal} onChange={(e) => setHExternal(e.target.value)} />
 
       {layers.map((layer, index) => (
-          <Box key={index} sx={{ marginBottom: "15px", marginTop: "35px", textAlign: "center", flexGrow: 1  }}>
-      <Box
-      component="img"
-      src={Cilindric}
-      alt={layer.material}
-      sx={{ width: 80, height: 80, objectFit: "cover"}}
-    />
-          <CylinderLengthInput value={layer.length} onChange={(e) => handleLayerChange(index, "length", e.target.value)} />
-          <InternalRayInput value={layer.radius1} onChange={(e) => handleLayerChange(index, "radius1", e.target.value)} />
-          <ExternalRayInput value={layer.radius2} onChange={(e) => handleLayerChange(index, "radius2", e.target.value)} />
+        <Box key={index} sx={{ marginBottom: "15px", marginTop: "35px" }}>
+          <CylinderLengthInput
+            value={layer.length}
+            onChange={(e) => handleLayerChange(index, "length", e.target.value)}
+          />
+          <InternalRayInput
+            value={layer.radius1}
+            onChange={(e) => handleLayerChange(index, "radius1", e.target.value)}
+          />
+          <ExternalRayInput
+            value={layer.radius2}
+            onChange={(e) => handleLayerChange(index, "radius2", e.target.value)}
+            error={parseFloat(layer.radius1) >= parseFloat(layer.radius2)}
+            helperText={
+              parseFloat(layer.radius1) >= parseFloat(layer.radius2)
+                ? "Raio externo deve ser maior que o interno"
+                : ""
+            }
+          />
           <MaterialSelector
             materials={materials}
             selectedMaterial={layer.material}
@@ -278,7 +295,6 @@ const CylindricalConvection = () => {
       <AddLayerButton onClick={addLayer} />
       <CalculateButton onClick={handleCalculate} isFormValid={isFormValid()} />
 
-      {/* Seletor de visualização */}
       <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mb: 3 }}>
         {views.map(({ key, label }) => (
           <Button
@@ -297,27 +313,21 @@ const CylindricalConvection = () => {
 
       {activeView === "chart" && (
         chartData.length > 0 ? (
-        
           <ThermalConductivityChart selectedMaterials={chartData} />
         ) : (
-          <Typography variant="body2" color="text.secondary">
-            Nenhum material válido selecionado.
-          </Typography>
+          <Typography variant="body2">Nenhum material válido selecionado.</Typography>
         )
       )}
 
-      {activeView === "bubble" && (
+      {activeView === "ChatRay" && (
         chartData.length > 0 ? (
           <BubbleChart selectedMaterials={chartData} />
-        
         ) : (
-          <Typography variant="body2" color="text.secondary">
-            Nenhum dado válido para exibir os raios.
-          </Typography>
+          <Typography variant="body2">Nenhum dado válido para exibir os raios.</Typography>
         )
       )}
 
-      <History historyData={history} />
+      <History />
     </Box>
   );
 };

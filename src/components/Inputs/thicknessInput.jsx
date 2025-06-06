@@ -48,7 +48,7 @@ const ThicknessInput = ({ value, onChange }) => {
              disableRestoreFocus
            >
              <Typography sx={{ p: 2, maxWidth: 300, fontSize: 14 }}>
-             Espessura em metros do objeto </Typography>
+             refere-se à distância entre duas superfícies opostas de um objeto ou material, em metros. </Typography>
            </Popover>
          </>
        );

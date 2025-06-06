@@ -1,73 +1,90 @@
 import React, { useState, useEffect } from "react";
-import { Box,Typography, IconButton, useTheme, Button } from "@mui/material";
+import { Box, Typography, IconButton, useTheme, Button } from "@mui/material";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import History from "./componentes/History";
 import MaterialSelector from "../materialSelector";
 import ResultBox from "../resultBox";
 import CalculateButton from "../calculateButton";
 import AddLayerButton from "../addLayerButton";
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+  addDoc,
+  serverTimestamp,
+} from "firebase/firestore";
+import { db } from "../../firebase";
+import { useAuth } from "../../AuthContext";
 import ThermalConductivityChart from "../Graphics/ThermalConductivityChart";
 import TemperatureInput from "../Inputs/Temperature";
 import CylinderLengthInput from "../Inputs/CylinderLengthInput";
 import InternalRayInput from "../Inputs/InternalRayInput";
 import ExternalRayInput from "../Inputs/ExternalRayInput";
 import BubbleChart from "../Graphics/BubbleChart";
-import Cilindric from "../../assets/cilindric.png"
+import Cilindric from "../../assets/cilindric.png";
 
 const CylindricalConduction = () => {
   const theme = useTheme();
-  
-  // Estados
+  const { user } = useAuth();
+
   const [deltaT, setDeltaT] = useState("");
   const [layers, setLayers] = useState([{ length: "", radius1: "", radius2: "", k: "" }]);
   const [totalResistance, setTotalResistance] = useState(0);
   const [heatFlux, setHeatFlux] = useState(0);
-  const [history, setHistory] = useState([]);
   const [materials, setMaterials] = useState([]);
   const [activeView, setActiveView] = useState("result");
 
-
-  // Efeito para carregar os materiais
-  const LOCAL_STORAGE_KEY = "condCilHistory";
-
-   useEffect(() => {
-    
-      fetch("https://minha-api-workers.apimateriallistcalculator.workers.dev/src/index")
-        .then(response => response.json())
-        .then(data => setMaterials(data))
-        .catch(error => console.error("Erro ao carregar materiais:", error));
-    }, []);
-    useEffect(() => {
-      const rawData = localStorage.getItem(LOCAL_STORAGE_KEY);
-      console.log("Dados brutos no localStorage:", rawData);
+  // 🔥 Buscar materiais
+  useEffect(() => {
+    const fetchMaterials = async () => {
       try {
-        const savedHistory = JSON.parse(rawData) || [];
-        console.log("Histórico carregado:", savedHistory);
-        setHistory(savedHistory);
+        const response = await fetch("https://minha-api-workers.apimateriallistcalculator.workers.dev/src/index");
+        const apiMaterials = await response.json();
+
+        const materialsRef = collection(db, "user_materials");
+        const q = query(materialsRef, where("userId", "==", user?.uid));
+        const querySnapshot = await getDocs(q);
+
+        const userMaterials = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        setMaterials([...apiMaterials, ...userMaterials]);
       } catch (error) {
-        console.error("Erro ao fazer parse do localStorage:", error);
-        setHistory([]); // Define um valor padrão para evitar erros
+        console.error("Erro ao carregar materiais:", error);
       }
-    }, []);
+    };
 
-  // Efeito para carregar o histórico salvo
-  useEffect(() => {
-    const storedHistory = JSON.parse(localStorage.getItem("condCilHistory")) || [];
-    setHistory(storedHistory);
-  }, []);
+    if (user) fetchMaterials();
+  }, [user]);
 
-  // Efeito para salvar novo cálculo no histórico
-  useEffect(() => {
-    if (totalResistance > 0) {
-      saveToHistory(totalResistance);
-    }
-  }, [totalResistance]);
+  // 🔢 Chart data
+  const chartData = layers
+    .map(layer => ({
+      material: layer.material || "Desconhecido",
+      k: parseFloat(layer.k) || 0,
+      length: parseFloat(layer.length) || 0,
+      r1: parseFloat(layer.radius1) || 0,
+      r2: parseFloat(layer.radius2) || 0,
+    }))
+    .filter(layer => layer.material);
 
-  // Manipuladores de entrada
+  // ✅ Validação
+  const isFormValid = () => {
+    if (!deltaT) return false;
+    return layers.every(layer =>
+      layer.length && layer.radius1 && layer.radius2 && layer.k &&
+      parseFloat(layer.radius2) > parseFloat(layer.radius1)
+    );
+  };
+
+  // 🔢 Handlers
   const handleLayerChange = (index, field, value) => {
     if (/^-?\d*\.?\d*$/.test(value)) {
-      setLayers(prevLayers =>
-        prevLayers.map((layer, i) => (i === index ? { ...layer, [field]: value } : layer))
+      setLayers(prev =>
+        prev.map((layer, i) => (i === index ? { ...layer, [field]: value } : layer))
       );
     }
   };
@@ -75,36 +92,19 @@ const CylindricalConduction = () => {
   const handleMaterialChange = (index, value) => {
     const selectedMaterial = materials.find(mat => mat.name === value);
     if (!selectedMaterial) return;
-  
+
     setLayers(prev => {
       const newLayers = [...prev];
-      newLayers[index] = { 
-        ...newLayers[index], 
-        k: selectedMaterial.thermalConductivityDry, // ✅ Correto
+      newLayers[index] = {
+        ...newLayers[index],
+        k: selectedMaterial.thermalConductivityDry,
         material: selectedMaterial.name,
-        state: "seco" // Define um estado padrão
+        state: "seco",
       };
       return newLayers;
     });
   };
 
-  const chartData = layers
-  .map(layer => ({
-    material: layer.material || "Desconhecido",
-    k: parseFloat(layer.k) || 0,
-    length: parseFloat(layer.length) || 0,
-    r1: parseFloat(layer.radius1) || 0,
-    r2: parseFloat(layer.radius2) || 0,
-  }))
-  .filter(layer => layer.material);
-
-// Botões de visualização
-const views = [
-  { key: "result", label: "Resultado" },
-  { key: "chart", label: "Condutividade" },
-  { key: "bubble", label: "Raios" },
-];
-  
   const handleStateChange = (index, state) => {
     setLayers(prev =>
       prev.map((layer, i) =>
@@ -120,156 +120,137 @@ const views = [
       )
     );
   };
-  
-  
-  
-  // Validação do formulário
-  const isFormValid = () => {
-    if (!deltaT) return false;
-    return layers.every(layer => 
-      layer.length && layer.radius1 && layer.radius2 && layer.k && 
-      parseFloat(layer.radius2) > parseFloat(layer.radius1)
-    );
-  };
-// removar e adicionar camada
+
   const addLayer = () => {
-    setLayers((prevLayers) => [...prevLayers, { length: "", radius1: "", radius2: "", k: "" }]);
-  };
-  
-  const removeLayer = (index) => {
-    setLayers(layers.filter((_, i) => i !== index));
+    setLayers(prev => [...prev, { length: "", radius1: "", radius2: "", k: "" }]);
   };
 
-  // Cálculo da resistência térmica e fluxo de calor
-  const handleCalculate = () => {
+  const removeLayer = (index) => {
+    setLayers(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // 🔥 Cálculo
+  const handleCalculate = async () => {
     let totalRes = 0;
     let valid = true;
-  
+
     layers.forEach(layer => {
       const L = parseFloat(layer.length);
       const r1 = parseFloat(layer.radius1);
       const r2 = parseFloat(layer.radius2);
       const kValue = parseFloat(layer.k);
-  
+
       if (isNaN(L) || isNaN(r1) || isNaN(r2) || isNaN(kValue) || L <= 0 || r1 <= 0 || r2 <= r1 || kValue <= 0) {
         valid = false;
         return;
       }
-  
+
       totalRes += Math.log(r2 / r1) / (2 * Math.PI * kValue * L);
     });
-  
+
     if (valid && deltaT) {
       const parsedDeltaT = parseFloat(deltaT);
       if (!isNaN(parsedDeltaT)) {
+        const heat = (parsedDeltaT / totalRes).toFixed(2);
         setTotalResistance(totalRes);
-        setHeatFlux((parsedDeltaT / totalRes).toFixed(2));
+        setHeatFlux(heat);
+        await saveToFirestore(totalRes, heat);
       }
     } else {
-      alert("Erro: Certifique-se de que todos os valores são válidos e que o raio externo é maior que o raio interno.");
+      alert("Erro: Verifique os valores.");
     }
   };
 
-  // Gerenciamento do histórico
-  const saveToHistory = (totalRes) => {
+  // 🔥 Salvar no Firestore
+  const saveToFirestore = async (totalRes, heat) => {
+    if (!user) return;
+
     const newEntry = {
+      userId: user.uid,
+      calculatorType: "conduction_cylindrical",
       deltaT,
       totalResistance: Number(totalRes).toFixed(6),
-      heatFlux: (parseFloat(deltaT) / totalRes).toFixed(2),
+      heatFlux: heat,
       layers: layers.map(layer => ({
         material: layer.material || "Desconhecido",
         state: layer.state || "seco",
         length: layer.length || "0",
         radius1: layer.radius1 || "0",
-        radius2: layer.radius2 || "0"
+        radius2: layer.radius2 || "0",
+        k: layer.k || "0",
       })),
-      
-      timestamp: new Date().toLocaleString(),
+      timestamp: serverTimestamp(),
     };
-  
-    let storedHistory = JSON.parse(localStorage.getItem("condCilHistory")) || [];
-    storedHistory.unshift(newEntry);
-  
-    if (storedHistory.length > 3) {
-      storedHistory = storedHistory.slice(0, 3);
+
+    try {
+      await addDoc(collection(db, "history"), newEntry);
+      console.log("Cálculo salvo no Firestore.");
+    } catch (error) {
+      console.error("Erro ao salvar no Firestore:", error);
     }
-  
-    localStorage.setItem("condCilHistory", JSON.stringify(storedHistory));
-    setHistory([...storedHistory]);
   };
 
+  const views = [
+    { key: "result", label: "Resultado" },
+    { key: "chart", label: "Condutividade" },
+    { key: "bubble", label: "Raios" },
+  ];
+
   return (
-    <Box sx={{ maxWidth: 500, margin: "50px auto", padding: "30px", borderRadius: "16px", boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)", backgroundColor: theme.palette.background.paper, textAlign: "center" }}>
+    <Box sx={{ maxWidth: 500, margin: "50px auto", padding: "30px", borderRadius: "16px", backgroundColor: theme.palette.background.paper }}>
       <Typography variant="h4" gutterBottom>
-        Transferência de Calor em Estruturas cilindricas
+        Condução em estruturas Cilindricas
       </Typography>
 
-      <TemperatureInput value={deltaT} onChange={(e) => {
-          const value = e.target.value;
-          if (/^-?\d*\.?\d*$/.test(value)) {
-            setDeltaT(value);
-          }
-        }}/>
-   
+      <Box component="img" src={Cilindric} sx={{ width: 80, height: 80 }} />
 
-     
+      <TemperatureInput value={deltaT} onChange={(e) => setDeltaT(e.target.value)} />
 
       {layers.map((layer, index) => (
-        
-        <Box key={index} sx={{ marginBottom: "15px", marginTop: "35px", textAlign: "center", flexGrow: 1  }}>
-      <Box
-      component="img"
-      src={Cilindric}
-      alt={layer.material}
-      sx={{ width: 80, height: 80, objectFit: "cover"}}
-    />
-          <CylinderLengthInput value={layer.length} onChange={(e) => handleLayerChange(index, "length", e.target.value)}/>
-            <InternalRayInput value={layer.radius1} onChange={(e) => handleLayerChange(index, "radius1", e.target.value)} />
-            <ExternalRayInput value={layer.radius2} onChange={(e) => handleLayerChange(index, "radius2", e.target.value)} />
-          <MaterialSelector materials={materials} selectedMaterial={layer.material}selectedState={layer.state}onMaterialChange={(value) => handleMaterialChange(index, value)}onStateChange={(value) => handleStateChange(index, value)}/>
- <IconButton onClick={() => removeLayer(index)}><RemoveCircleIcon /></IconButton>
+        <Box key={index} sx={{ marginBottom: "15px", marginTop: "35px" }}>
+          <CylinderLengthInput value={layer.length} onChange={(e) => handleLayerChange(index, "length", e.target.value)} />
+          <InternalRayInput value={layer.radius1} onChange={(e) => handleLayerChange(index, "radius1", e.target.value)} />
+          <ExternalRayInput
+            value={layer.radius2}
+            onChange={(e) => handleLayerChange(index, "radius2", e.target.value)}
+            error={parseFloat(layer.radius1) >= parseFloat(layer.radius2)}
+            helperText={parseFloat(layer.radius1) >= parseFloat(layer.radius2) ? "Raio externo deve ser maior que o interno" : ""}
+          />
+          <MaterialSelector
+            materials={materials}
+            selectedMaterial={layer.material}
+            selectedState={layer.state}
+            onMaterialChange={(value) => handleMaterialChange(index, value)}
+            onStateChange={(value) => handleStateChange(index, value)}
+          />
+          <IconButton onClick={() => removeLayer(index)}>
+            <RemoveCircleIcon />
+          </IconButton>
         </Box>
       ))}
+
       <AddLayerButton onClick={addLayer} />
       <CalculateButton onClick={handleCalculate} isFormValid={isFormValid()} />
 
       <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mb: 3 }}>
-  {views.map(({ key, label }) => (
-    <Button
-      key={key}
-      variant={activeView === key ? "contained" : "outlined"}
-      onClick={() => setActiveView(key)}
-    >
-      {label}
-    </Button>
-  ))}
-</Box>
+        {views.map(({ key, label }) => (
+          <Button
+            key={key}
+            variant={activeView === key ? "contained" : "outlined"}
+            onClick={() => setActiveView(key)}
+          >
+            {label}
+          </Button>
+        ))}
+      </Box>
 
-{activeView === "result" && (
-  <ResultBox totalResistance={totalResistance} heatFlux={heatFlux} />
-)}
+      {activeView === "result" && <ResultBox totalResistance={totalResistance} heatFlux={heatFlux} />}
 
-{activeView === "chart" && (
-  chartData.length > 0 ? (
-    <ThermalConductivityChart selectedMaterials={chartData} />
-  ) : (
-    <Typography variant="body2" color="text.secondary">
-      Nenhum material válido selecionado para exibir a condutividade térmica.
-    </Typography>
-  )
-)}
+      {activeView === "chart" && (chartData.length > 0 ? <ThermalConductivityChart selectedMaterials={chartData} /> : <Typography variant="body2">Nenhum material válido.</Typography>)}
 
-{activeView === "bubble" && (
-  chartData.length > 0 ? (
-    <BubbleChart selectedMaterials={chartData} />
-  ) : (
-    <Typography variant="body2" color="text.secondary">
-      Nenhum dado de raio válido para exibir o gráfico.
-    </Typography>
-  )
-)}
+      {activeView === "bubble" && (chartData.length > 0 ? <BubbleChart selectedMaterials={chartData} /> : <Typography variant="body2">Nenhum dado válido.</Typography>)}
 
-      <History historyData={history} />
+      <History />
     </Box>
   );
 };

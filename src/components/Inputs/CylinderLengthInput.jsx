@@ -49,7 +49,7 @@ const CylinderLengthInput = ({value, onChange}) => {
             disableRestoreFocus
           >
             <Typography sx={{ p: 2, maxWidth: 300, fontSize: 14 }}>
-              A área corresponde à estremidade de um cilindro a outra.
+              A área corresponde à estremidade de um cilindro a outra(do topo a base).
             </Typography>
           </Popover>
         </>
