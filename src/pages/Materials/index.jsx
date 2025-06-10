@@ -66,6 +66,12 @@ const { user } = useAuth();
   setMaterials((prev) => prev.filter((material) => material.id !== id));
 };
 
+       const handleMaterialUpdated = (updatedMaterial) => {
+  setMaterials(prev =>
+    prev.map(mat => (mat.id === updatedMaterial.id ? updatedMaterial : mat))
+  );
+};
+
   return (
 <Box>          
   <Header/>
@@ -113,12 +119,14 @@ const { user } = useAuth();
           sm={3}   // 4 colunas em tablets
           md={2.4} // 5 colunas em desktop
         >
-          <MaterialsButton
-            material={mat}
-            onSelect={setSelected}
-            isSelected={mat.id === selected?.id}
-             onDelete={handleDeleteMaterial}
-          />
+         <MaterialsButton
+  material={mat}
+  onSelect={setSelected}
+  isSelected={mat.id === selected?.id}
+  onDelete={handleDeleteMaterial}
+  onMaterialUpdated={handleMaterialUpdated} // 👈 aqui!
+/>
+
         </Grid>
       ))}
       {user?.uid && (

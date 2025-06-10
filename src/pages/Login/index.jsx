@@ -8,7 +8,7 @@ import {
   IconButton,
   InputAdornment,
 } from "@mui/material";
-import { Google, Visibility, VisibilityOff } from "@mui/icons-material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import UserInput from "../../components/Inputs/UserInput";
 import { useAuth } from "../../AuthContext";
 import { ThemeContext } from "../../context/ThemeContext";
@@ -17,7 +17,7 @@ import BackgroundAnimation from "../../components/Animation";
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { login, loginWithGoogle } = useAuth();
+  const { login } = useAuth();
   const { darkMode } = useContext(ThemeContext);
 
   const [email, setEmail] = useState("");
@@ -48,17 +48,6 @@ const LoginPage = () => {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    setError("");
-    try {
-      await loginWithGoogle();
-      navigate("/Calculadora");
-    } catch (err) {
-      const mensagemAmigavel = traduzirErroFirebase(err.code);
-      setError(mensagemAmigavel);
-    }
-  };
-
   const handleTogglePassword = () => {
     setShowPassword((prev) => !prev);
   };
@@ -73,7 +62,7 @@ const LoginPage = () => {
         backgroundColor: darkMode ? "#121212" : "#f4f4f4",
       }}
     >
-         <BackgroundAnimation/>
+      <BackgroundAnimation />
       <Box
         sx={{
           width: "400px",
@@ -84,7 +73,7 @@ const LoginPage = () => {
             ? "0 4px 20px rgba(0,0,0,0.7)"
             : "0 4px 20px rgba(0,0,0,0.1)",
           textAlign: "center",
-          zIndex: 2
+          zIndex: 2,
         }}
       >
         <Typography
@@ -153,7 +142,9 @@ const LoginPage = () => {
             color: darkMode ? "#a326f0" : "#7000b5",
             textTransform: "none",
             "&:hover": {
-              backgroundColor: darkMode ? "rgba(216, 144, 211, 0.1)" : "#f8e6ff",
+              backgroundColor: darkMode
+                ? "rgba(216, 144, 211, 0.1)"
+                : "#f8e6ff",
               borderColor: darkMode ? "#a326f0" : "#7000b5",
             },
           }}
@@ -170,24 +161,6 @@ const LoginPage = () => {
         >
           ou
         </Divider>
-
-        <Button
-          fullWidth
-          variant="outlined"
-          startIcon={<Google />}
-          sx={{
-            textTransform: "none",
-            borderColor: darkMode ? "#a326f0" : "#7000b5",
-            color: darkMode ? "#a326f0" : "#7000b5",
-            "&:hover": {
-              backgroundColor: darkMode ? "rgba(216, 144, 211, 0.1)" : "#f8e6ff",
-              borderColor: darkMode ? "#a326f0" : "#7000b5",
-            },
-          }}
-          onClick={handleGoogleLogin}
-        >
-          Entrar com Google
-        </Button>
 
         <Typography
           sx={{

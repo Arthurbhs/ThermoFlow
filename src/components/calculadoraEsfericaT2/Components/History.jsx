@@ -90,7 +90,7 @@ const HistoryPlaneFirestore = () => {
       }}
     >
       <Typography variant="h5" gutterBottom>
-        Histórico - Calculadora Plana
+        Histórico de Convecção Esférica
       </Typography>
       <List>
         {history.length === 0 ? (

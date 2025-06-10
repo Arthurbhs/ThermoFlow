@@ -1,5 +1,14 @@
 import React, { useState } from 'react';
-import { Box, Typography, CardContent, CardMedia, Divider, Grid } from '@mui/material';
+import {
+  Box,
+  Typography,
+  CardContent,
+  CardMedia,
+  Divider,
+  Grid,
+} from '@mui/material';
+
+import ChartTitleWithPopover from '../TutorialLabel'; // certifique-se do caminho correto
 
 const MaterialShow = ({ material }) => {
   const [loaded, setLoaded] = useState(false);
@@ -13,7 +22,15 @@ const MaterialShow = ({ material }) => {
       <Grid container spacing={2} alignItems="flex-start">
         {/* Imagem à esquerda */}
         <Grid item xs={12} md={4}>
-          <Box sx={{ position: 'relative', width: '100%', paddingTop: '100%', overflow: 'hidden', borderRadius: 2 }}>
+          <Box
+            sx={{
+              position: 'relative',
+              width: '100%',
+              paddingTop: '100%',
+              overflow: 'hidden',
+              borderRadius: 2,
+            }}
+          >
             {/* Thumbnail borrado */}
             <CardMedia
               component="img"
@@ -57,20 +74,32 @@ const MaterialShow = ({ material }) => {
         {/* Texto à direita */}
         <Grid item xs={12} md={8}>
           <CardContent sx={{ p: 0 }}>
-            <Typography variant="h5" gutterBottom>
-              {material.name}
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+              <Typography variant="h5" gutterBottom sx={{ mr: 1 }}>
+                {material.name}
+              </Typography>
+              <ChartTitleWithPopover
+                description={`Aqui voce pode consultar todos os dados que temos do material: ${material.name}. Para visualisar outro material, basta selecionalo na lista abaixo.`}
+              />
+            </Box>
 
             <Divider sx={{ my: 2 }} />
 
-            <Typography variant="body1"><strong>Tipo:</strong> {material.type}</Typography>
-            <Typography variant="body1"><strong>Densidade:</strong> {material.density} kg/m³</Typography>
             <Typography variant="body1">
-              <strong>Condutividade térmica (seco):</strong> {material.thermalConductivityDry} W/m·K
+              <strong>Tipo:</strong> {material.type}
+            </Typography>
+            <Typography variant="body1">
+              <strong>Densidade:</strong> {material.density} kg/m³
+            </Typography>
+            <Typography variant="body1">
+              <strong>Condutividade térmica (seco):</strong>{' '}
+              {material.thermalConductivityDry} W/m·K
             </Typography>
             <Typography variant="body1" gutterBottom>
               <strong>Condutividade térmica (molhado):</strong>{' '}
-              {material.thermalConductivityWet !== null ? `${material.thermalConductivityWet} W/m·K` : 'N/A'}
+              {material.thermalConductivityWet !== null
+                ? `${material.thermalConductivityWet} W/m·K`
+                : 'N/A'}
             </Typography>
 
             <Divider sx={{ my: 2 }} />

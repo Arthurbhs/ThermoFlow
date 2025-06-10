@@ -15,13 +15,18 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
 import StarIcon from "@mui/icons-material/Star";
 
-import {collection,getDocs,query,where,addDoc,deleteDoc,doc,
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+  addDoc,
+  deleteDoc,
+  doc,
 } from "firebase/firestore";
-import MaterialCreate from "../MaterialCreate"; // ajuste o caminho conforme seu projeto
+import MaterialCreate from "../MaterialCreate";
 import { db } from "../../firebase";
 import { useAuth } from "../../AuthContext";
-
-
 
 const normalizeText = (text) =>
   text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
@@ -42,19 +47,16 @@ const MaterialSelector = ({
   const [loading, setLoading] = useState(true);
   const [createModalOpen, setCreateModalOpen] = useState(false);
 
-  // 🔥 Fetch materiais e favoritos
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Materiais da API
         const res = await fetch(
           "https://minha-api-workers.apimateriallistcalculator.workers.dev/src/index"
         );
         const data = await res.json();
         setApiMaterials(data);
 
-        // Materiais do usuário
         let userMats = [];
         if (user?.uid) {
           const q = query(
@@ -68,7 +70,6 @@ const MaterialSelector = ({
           }));
           setUserMaterials(userMats);
 
-          // Favoritos
           const favQuery = query(
             collection(db, "favorites"),
             where("userId", "==", user.uid)
@@ -90,22 +91,17 @@ const MaterialSelector = ({
     fetchData();
   }, [user]);
 
-  // 🔧 Lista total de materiais
   const allMaterials = [...userMaterials, ...apiMaterials];
 
-  // 🔥 Aplicar favoritos no topo
   const sortedMaterials = [
-    // Favoritos primeiro
     ...allMaterials.filter((mat) =>
       favorites.some((fav) => fav.materialName === mat.name)
     ),
-    // Depois materiais do usuário (não favoritos)
     ...allMaterials.filter(
       (mat) =>
         !favorites.some((fav) => fav.materialName === mat.name) &&
         userMaterials.some((um) => um.name === mat.name)
     ),
-    // Depois materiais da API (não favoritos)
     ...allMaterials.filter(
       (mat) =>
         !favorites.some((fav) => fav.materialName === mat.name) &&
@@ -113,23 +109,19 @@ const MaterialSelector = ({
     ),
   ];
 
-  // 🔍 Filtro por busca
   const filteredMaterials = sortedMaterials.filter((material) =>
     normalizeText(material.name).includes(normalizeText(searchTerm))
   );
 
-  // ⭐ Verifica se é favorito
   const isFavorite = (materialName) =>
     favorites.some((fav) => fav.materialName === materialName);
 
-  // ⭐ Adiciona ou remove favorito
   const toggleFavorite = async (materialName) => {
     if (!user?.uid) return;
 
     const favorite = favorites.find((f) => f.materialName === materialName);
 
     if (favorite) {
-      // Remover
       try {
         await deleteDoc(doc(db, "favorites", favorite.id));
         setFavorites((prev) =>
@@ -139,7 +131,6 @@ const MaterialSelector = ({
         console.error("Erro ao remover favorito:", err);
       }
     } else {
-      // Adicionar
       try {
         const docRef = await addDoc(collection(db, "favorites"), {
           userId: user.uid,
@@ -154,6 +145,11 @@ const MaterialSelector = ({
       }
     }
   };
+
+  // 🔎 Objeto do material selecionado
+  const selectedMatObj = allMaterials.find(
+    (mat) => mat.name === selectedMaterial
+  );
 
   return (
     <FormControl fullWidth>
@@ -173,14 +169,14 @@ const MaterialSelector = ({
         }}
       >
         <MenuItem
-  onClick={() => {
-    setCreateModalOpen(true);
-    setOpen(false); // fecha o select para abrir modal
-  }}
-  sx={{ fontWeight: "bold", color: "primary.main" }}
->
-  + Criar material
-</MenuItem>
+          onClick={() => {
+            setCreateModalOpen(true);
+            setOpen(false);
+          }}
+          sx={{ fontWeight: "bold", color: "primary.main" }}
+        >
+          + Criar material
+        </MenuItem>
 
         <MenuItem disableRipple>
           <TextField
@@ -280,26 +276,50 @@ const MaterialSelector = ({
             <MenuItem value="seco">Seco</MenuItem>
             <MenuItem value="molhado">Molhado</MenuItem>
           </Select>
-          
-        </FormControl>
-        
-      )}
-      {createModalOpen && (
-  <MaterialCreate
-    open={createModalOpen}
-    onClose={() => setCreateModalOpen(false)}
-    onMaterialCreated={(newMaterial) => {
-      setUserMaterials((prev) => [...prev, newMaterial]);
-      setCreateModalOpen(false);
-      onMaterialChange(newMaterial.name); // opcional: já seleciona o novo material
-    }}
-  />
-)}
 
+          {selectedState && (
+            <Box sx={{ mt: 2 }}>
+              <TextField
+                label="Condutividade Térmica (K)"
+                value={(() => {
+                  if (!selectedMatObj) return "N/A";
+                  if (selectedState === "seco") {
+                    return (
+                      selectedMatObj.thermalConductivityDry ??
+                      selectedMatObj.conductivityDry ??
+                      "N/A"
+                    );
+                  }
+                  if (selectedState === "molhado") {
+                    return (
+                      selectedMatObj.thermalConductivityWet ??
+                      selectedMatObj.conductivityWet ??
+                      "N/A"
+                    );
+                  }
+                  return "N/A";
+                })()}
+                fullWidth
+                InputProps={{ readOnly: true }}
+              />
+            </Box>
+          )}
+        </FormControl>
+      )}
+
+      {createModalOpen && (
+        <MaterialCreate
+          open={createModalOpen}
+          onClose={() => setCreateModalOpen(false)}
+          onMaterialCreated={(newMaterial) => {
+            setUserMaterials((prev) => [...prev, newMaterial]);
+            setCreateModalOpen(false);
+            onMaterialChange(newMaterial.name);
+          }}
+        />
+      )}
     </FormControl>
-    
   );
-  
 };
 
 export default MaterialSelector;

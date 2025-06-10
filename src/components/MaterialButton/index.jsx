@@ -1,13 +1,19 @@
 import { Box, IconButton, Tooltip, Typography, Snackbar, Alert } from "@mui/material";
 import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 import { useAuth } from "../../AuthContext";
 import { doc, deleteDoc } from "firebase/firestore";
 import { db } from "../../firebase";
-import { useState } from "react";
+import { useState, useContext } from "react";
+import CreateMaterialModal from "../MaterialCreate";
+import { ThemeContext } from '../../context/ThemeContext';
 
-const MaterialsButton = ({ material, onSelect, isSelected, onDelete }) => {
+
+const MaterialsButton = ({ material, onSelect, isSelected, onDelete, onMaterialUpdated }) => {
   const { user } = useAuth();
+  const [editing, setEditing] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
+    const { darkMode } = useContext(ThemeContext);
 
   const handleDelete = async (e) => {
     e.stopPropagation(); // ⚠️ Impede que o clique no botão acione o onClick do card
@@ -60,25 +66,51 @@ const MaterialsButton = ({ material, onSelect, isSelected, onDelete }) => {
           }}
         />
 
-        {/* Botão deletar */}
-        {material.userId === user?.uid && (
-          <Tooltip title="Excluir">
-            <IconButton
-              size="small"
-              sx={{
-                position: "absolute",
-                top: 4,
-                right: 4,
-                backgroundColor: "#fff",
-                zIndex: 10, // 🏆 Garante que fique acima de todas as camadas
-                '&:hover': { backgroundColor: "#eee" }
-              }}
-              onClick={handleDelete}
-            >
-              <DeleteIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        )}
+        {/* Botão editar e deletar */}
+      {material.userId === user?.uid && (
+  <>
+    {/* Ícone Editar (em cima) */}
+    <Tooltip title="Editar">
+      <IconButton
+        size="small"
+        sx={{
+          position: "absolute",
+          top: 4,
+          right: 2,
+          backgroundColor: darkMode ? "#616161" : "white",
+          zIndex: 10,
+          '&:hover': { backgroundColor: darkMode ? "#7c00a6" : "#cc33ff" }
+        }}
+        onClick={(e) => {
+          e.stopPropagation();
+          setEditing(true);
+        }}
+      >
+        <EditIcon fontSize="small" />
+      </IconButton>
+    </Tooltip>
+
+    {/* Ícone Deletar (abaixo) */}
+    <Tooltip title="Excluir">
+      <IconButton
+        size="small"
+        sx={{
+          position: "absolute",
+          top: 36, // abaixo do botão editar
+          right: 2,
+          backgroundColor: darkMode ? "#616161" : "white",
+          zIndex: 10,
+          '&:hover': { backgroundColor: darkMode ? "#7c00a6" : "#cc33ff" }
+        }}
+        onClick={handleDelete}
+      >
+        <DeleteIcon fontSize="small" />
+      </IconButton>
+    </Tooltip>
+  </>
+)}
+       
+
 
         {/* Overlay com nome */}
         <Box
@@ -122,6 +154,23 @@ const MaterialsButton = ({ material, onSelect, isSelected, onDelete }) => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+{editing && (
+ <CreateMaterialModal
+  open={editing}
+  onClose={() => setEditing(false)}
+  onMaterialCreated={() => setEditing(false)}
+  editingMaterial={material}
+  isEditing={true}
+  onMaterialUpdated={(updatedMaterial) => {
+    onMaterialUpdated?.(updatedMaterial); // chama a função do pai para atualizar
+    setEditing(false);
+  }}
+/>
+
+)}
+
+
     </>
   );
 };

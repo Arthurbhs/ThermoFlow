@@ -89,7 +89,7 @@ const HistoryPlaneFirestore = () => {
       }}
     >
       <Typography variant="h5" gutterBottom>
-        Histórico - Calculadora Cilíndrica
+        Histórico de Condução Quadrada
       </Typography>
 
       <List>

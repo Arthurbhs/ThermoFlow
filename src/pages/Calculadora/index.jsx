@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { Box, Button, ButtonGroup, Typography, useTheme, useMediaQuery } from "@mui/material";
+import { useState, useEffect} from "react";
+import { Box, Button, ButtonGroup, useTheme, useMediaQuery } from "@mui/material";
+import { useLocation } from "react-router-dom";
 import Header from "../../components/Header";
 import CalculadoraPlana from "../../components/calculadoraPlana";
 import CalculadoraCilindro from "../../components/calculadoraCilindro";
@@ -17,9 +18,10 @@ const CalculadoraCoe = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery("(max-width: 900px)");
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const [categoria, setCategoria] = useState(null);
-  const [selecionado, setSelecionado] = useState(null);
+const [categoria, setCategoria] = useState(null);
+const [selecionado, setSelecionado] = useState(null);
   const [hover, setHover] = useState(null);
 
  const imagens = [
@@ -28,6 +30,20 @@ const CalculadoraCoe = () => {
   { id: "materiais", img: NovaImagem1, redirect: "/materiais" },
   { id: "estudos", img: NovaImagem2, redirect: "/estudos_pag1" },
 ];
+
+
+
+useEffect(() => {
+  if (location.pathname.includes("/conducao")) {
+    setCategoria("conducao");
+    setSelecionado("plana1");
+  } else if (location.pathname.includes("/conveccao")) {
+    setCategoria("conveccao");
+    setSelecionado("plana2");
+  }
+}, [location.pathname]);
+
+
 
   return (
     <Box sx={{ 
