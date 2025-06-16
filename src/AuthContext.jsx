@@ -25,7 +25,7 @@ import {
 // Cria o contexto
 const AuthContext = createContext();
 
-// Hook personalizado
+
 export const useAuth = () => useContext(AuthContext);
 
 // Provider
@@ -95,14 +95,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Login com Google
-  const loginWithGoogle = async () => {
-    const result = await signInWithPopup(auth, googleProvider);
-    const user = result.user;
-
-    await createUserDocument(user);
-    return result;
-  };
-
+  
   // Logout
   const logout = () => {
     return signOut(auth);
@@ -114,7 +107,6 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
-    loginWithGoogle,
   };
 
   return (

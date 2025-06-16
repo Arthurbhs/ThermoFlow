@@ -17,7 +17,7 @@ import SlideTutorial from "../TutorialSlider"
 
 const HeatTransferCalculator = () => {
   const theme = useTheme();
-  const [layers, setLayers] = useState([{ h: "", a: 1, material: "", state: "seco" }]);
+const [layers, setLayers] = useState([{ h: "", a: "1", material: "", state: "seco" }]);
   const [deltaT, setDeltaT] = useState("");
   const [area, setArea] = useState(1);
   const [totalResistance, setTotalResistance] = useState(0);
@@ -68,10 +68,11 @@ const HeatTransferCalculator = () => {
   }, [user]);
 
 const handleNumericInput = (value, setter) => {
-  const sanitized = value.replace(/[^0-9.]/g, "").replace(/^([0-9]*\.?[0-9]*).*$/, "$1");
-  const numericValue = parseFloat(sanitized) || 0;
-  setter(numericValue);
+  const sanitized = value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
+  setter(sanitized);
 };
+
+
 
 
   const handleLayerChange = (index, key, value) => {

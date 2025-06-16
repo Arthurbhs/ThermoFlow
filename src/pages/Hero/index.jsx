@@ -57,11 +57,11 @@ const WelcomePage = () => {
     }
   }, [showPopup]);  
 
-  useEffect(() => {
+ useEffect(() => {
+  if (!user) {
     const lastPopupDate = localStorage.getItem("lastPopupDate");
 
     if (!lastPopupDate) {
-      // Primeira vez acessando a página
       setShowPopup(true);
       setFirstTime(true);
       localStorage.setItem("lastPopupDate", new Date().toISOString());
@@ -76,7 +76,9 @@ const WelcomePage = () => {
         localStorage.setItem("lastPopupDate", new Date().toISOString());
       }
     }
-  }, []);
+  }
+}, [user]);
+
 
 
   return (
@@ -183,6 +185,7 @@ const WelcomePage = () => {
          }}
        >
          Esse website é um projeto que visa auxiliar e ensinar de forma didática sobre o cálculo de fluxo de calor.
+         através da leitura de conseitos, consulta de materiais e simulações de transferência de calor.
        </Typography>
        <Button
             variant="contained"

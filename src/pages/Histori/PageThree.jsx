@@ -234,10 +234,10 @@ fique em equilíbrio térmico, cessando as correntes convectivas. No início da 
           gutterBottom
           sx={{ fontWeight: "bold", color: "#7000b5", fontFamily: "'Playfair Display', serif" }}
         >
-         Diferenças entre condução, convecção e radiação
+         Diferenças entre condução e convecção
         </Typography>
         <Typography variant="body1" sx={{ color: textColor, fontFamily: "'Roboto', sans-serif", fontSize: "18px", lineHeight: 1.8 }}>
-Condução e convecção são as três diferentes formas de propagação do calor. 
+Condução e convecção são duas das três diferentes formas de propagação do calor. 
 O ponto em comum entre ambos processos é que deve haver uma diferença de temperatura entre diferentes
 corpos ou em diferentes pontos do mesmo corpo.
 A condução, como dito, ocorre pelo contato direto entre moléculas, que, ao colidirem, 
