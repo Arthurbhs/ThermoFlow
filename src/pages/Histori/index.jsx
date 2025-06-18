@@ -95,6 +95,8 @@ const boxColor = theme.palette.mode === "dark" ? "#424242" : "white";
               fontFamily: "'Roboto', sans-serif",
               fontSize: "18px",
               lineHeight: 1.8,
+              textAlign: "justify"
+              
             }}
           >
             A Lei de Fourier, desenvolvida por
@@ -154,6 +156,7 @@ const boxColor = theme.palette.mode === "dark" ? "#424242" : "white";
               fontFamily: "'Roboto', sans-serif",
               fontSize: "18px",
               lineHeight: 1.8,
+               textAlign: "justify"
             }}
           >
          no início do século XIX, descreve a condução de calor em materiais. 
@@ -168,7 +171,7 @@ const boxColor = theme.palette.mode === "dark" ? "#424242" : "white";
         <img src={Form} alt="Outra Imagem" style={{ maxWidth: "60%", height: "auto", borderRadius: "8px" }} />
       </Box>
 
-      <Box sx={{ textAlign: "center", maxWidth: "80%", margin: "0 auto", padding: 4 }}>
+      <Box sx={{ textAlign: "center", maxWidth: "90%", margin: "0 auto", }}>
 
 
       <Typography
@@ -178,7 +181,8 @@ const boxColor = theme.palette.mode === "dark" ? "#424242" : "white";
             fontFamily: "'Roboto', sans-serif",
             fontSize: "18px",
             lineHeight: 1.8,
-            padding: "20px"
+            padding: "20px",
+            textAlign: "justify"
           }}
         > A equação que traduz a lei de Fourier é: Q = k x A x (TD-TE)/l, em que Q é o débito de calor de D para E, A é a área da secção reta, l o comprimento da barra, TD e TE as temperaturas nos extremos da barra e k é a condutibilidade térmica do material de que é feita a barra.
 A condutibilidade térmica de um material é uma propriedade física desse material e existem tabelas que indicam os valores de k para os diferentes materiais.  </Typography>
@@ -191,7 +195,7 @@ A condutibilidade térmica de um material é uma propriedade física desse mater
         >
           O Impacto da Lei de Fourier
         </Typography>
-        <Typography variant="body1" sx={{ color: textColor, fontFamily: "'Roboto', sans-serif", fontSize: "18px", lineHeight: 1.8 }}>
+        <Typography variant="body1" sx={{ color: textColor, fontFamily: "'Roboto', sans-serif", fontSize: "18px", lineHeight: 1.8,  textAlign: "justify" }}>
         Fourier criou essa lei para entender e quantificar a transferência de calor, essencial na Revolução Industrial, em sistemas térmicos e de engenharia. Sua teoria foi apresentada em 1807 e formalizada em 1822 no livro{" "}
           <span
             onClick={() => toggleInfo("teoria")}

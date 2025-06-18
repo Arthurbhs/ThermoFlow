@@ -25,10 +25,11 @@ const [selecionado, setSelecionado] = useState(null);
   const [hover, setHover] = useState(null);
 
  const imagens = [
+  { id: "estudos", img: NovaImagem2, redirect: "/estudos_pag1" },
+  { id: "materiais", img: NovaImagem1, redirect: "/materiais" },
   { id: "conducao", img: Conducao, type: "conducao" },
   { id: "conveccao", img: Conveccao, type: "conveccao" },
-  { id: "materiais", img: NovaImagem1, redirect: "/materiais" },
-  { id: "estudos", img: NovaImagem2, redirect: "/estudos_pag1" },
+
 ];
 
 

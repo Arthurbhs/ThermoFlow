@@ -42,7 +42,7 @@ const boxColor = theme.palette.mode === "dark" ? "#424242" : "white";
   return (
     <Box sx={{ }}>
       <Header />
-       <Box sx={{ textAlign: "center", maxWidth: "80%", margin: "0 auto", padding: 4 }}>
+       <Box sx={{ textAlign: "center", maxWidth: "90%", margin: "0 auto", }}>
 
       
          <Typography
@@ -224,7 +224,7 @@ fique em equilíbrio térmico, cessando as correntes convectivas. No início da 
       </Box>
 
     
-      <Box sx={{ textAlign: "center", maxWidth: "80%", margin: "0 auto", padding: 4 }}>
+      <Box sx={{ textAlign: "center", maxWidth: "90%", margin: "0 auto"}}>
 
 
       

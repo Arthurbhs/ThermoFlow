@@ -46,6 +46,8 @@ const MaterialSelector = ({
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [infoOpen, setInfoOpen] = useState(null); // null ou nome do material
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -153,7 +155,7 @@ const MaterialSelector = ({
 
   return (
     <FormControl fullWidth>
-      <InputLabel>Material</InputLabel>
+
       <Select
         value={selectedMaterial}
         onChange={(e) => onMaterialChange(e.target.value)}
@@ -227,13 +229,35 @@ const MaterialSelector = ({
                     </Box>
                   }
                 >
-                  <IconButton
-                    size="small"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <InfoOutlinedIcon fontSize="small" />
-                  </IconButton>
+                 <IconButton
+  size="small"
+  onClick={(e) => {
+    e.stopPropagation();
+    setInfoOpen((prev) => (prev === material.name ? null : material.name));
+  }}
+>
+  <InfoOutlinedIcon fontSize="small" />
+</IconButton>
+
                 </Tooltip>
+
+                {infoOpen === material.name && (
+  <Box mt={1} ml={2}>
+    <Typography variant="body2">
+      <strong>Condutividade Seca:</strong>{" "}
+      {material.thermalConductivityDry ??
+        material.conductivityDry ??
+        "N/A"}
+    </Typography>
+    <Typography variant="body2">
+      <strong>Condutividade Molhada:</strong>{" "}
+      {material.thermalConductivityWet ??
+        material.conductivityWet ??
+        "N/A"}
+    </Typography>
+  </Box>
+)}
+
 
                 {user && (
                   <Tooltip

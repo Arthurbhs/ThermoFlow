@@ -48,7 +48,7 @@ const boxColor = theme.palette.mode === "dark" ? "#424242" : "white";
   return (
     <Box sx={{}}>
       <Header />
-       <Box sx={{ textAlign: "center", maxWidth: "80%", margin: "0 auto", padding: 4 }}>
+       <Box sx={{ textAlign: "center", maxWidth: "90%", margin: "0 auto" }}>
 
       
          <Typography
@@ -202,11 +202,10 @@ condução e a convecção.
     alignItems: "center",
     justifyContent: "center",
     flexWrap: "wrap",
-    padding: 4,
     flexDirection: { xs: "column", md: "row" },
     textAlign: { xs: "center", md: "left" },
     gap: 3,
-    maxWidth: "80%",
+    maxWidth: "90%",
     margin: "0 auto"
   }}
 >
